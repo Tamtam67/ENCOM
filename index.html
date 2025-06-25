@@ -108,7 +108,6 @@
 
   const STORAGE_KEY = 'tronUserName';
 
-  // Récupération du nom sauvegardé (le cas échéant)
   let savedName = localStorage.getItem(STORAGE_KEY);
   let userName = savedName ? savedName : 'USER';
   let waitingUserName = !savedName;
@@ -120,15 +119,14 @@
 - reboot isos
 - reset (ou restart) : recommencer la session
 Tape ta commande et appuie sur Entrée.`;
-  
-  // Initialisation du terminal selon si on a un nom sauvegardé
+
   if (waitingUserName) {
     promptEl.textContent = '';
     inputEl.placeholder = 'Entrez votre nom d’utilisateur...';
   } else {
     promptEl.textContent = `${userName}>`;
     printOutput(`Greetings ${userName}, welcome back to the Grid.`);
-    printOutput('Tape "help" pour la liste des commandes.');
+    printOutput(helpMessage);
     inputEl.placeholder = '';
   }
 
@@ -157,13 +155,7 @@ Patch aborted. CLU remains a threat.`,
 System stable.
 ISOs synchronized with mainframe.`,
 
-    'help':
-`Commandes disponibles:
-- scan flynn
-- patch clu
-- reboot isos
-- reset (ou restart) : recommencer la session
-Tape ta commande et appuie sur Entrée.`,
+    'help': helpMessage,
 
     '': ''
   };
@@ -174,7 +166,7 @@ Tape ta commande et appuie sur Entrée.`,
       printOutput(`${userName}> ${cmd}`);
       printOutput(responses[cmd]);
     } else if (cmd === '') {
-      // ne rien faire sur entrée vide
+      // ne rien faire
     } else {
       printOutput(`${userName}> ${cmd}`);
       printOutput(`[ERROR] Commande inconnue: "${cmd}". Tape "help" pour la liste.`);
@@ -193,11 +185,12 @@ Tape ta commande et appuie sur Entrée.`,
           localStorage.setItem(STORAGE_KEY, userName);
         }
         printOutput(`Greetings ${userName}, welcome to the Grid.`);
+        printOutput(helpMessage);
         waitingUserName = false;
         promptEl.textContent = `${userName}>`;
         inputEl.placeholder = '';
       } else {
-        if (cmd.toLowerCase() === '/userreset' || cmd.toLowerCase() === 'restart' || cmd.toLowerCase() === 'reset') {
+        if (cmd.toLowerCase() === 'reset' || cmd.toLowerCase() === 'restart') {
           localStorage.removeItem(STORAGE_KEY);
           location.reload();
           return;
