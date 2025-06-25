@@ -18,6 +18,7 @@
       height: 100vh;
       margin: 0;
       text-align: center;
+      padding: 1rem;
     }
 
     h1 {
@@ -50,8 +51,19 @@
     }
 
     #logo {
-      max-width: 300px;
+      max-width: 70vw;
+      max-height: 150px;
       margin-bottom: 2rem;
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 1.5em;
+      }
+
+      p {
+        font-size: 0.9em;
+      }
     }
   </style>
 </head>
