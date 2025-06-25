@@ -117,119 +117,6 @@
   </div>
 
 <script>
-  const outputEl = document.getElementById('output');
-  const inputEl = document.getElementById('cmdline');
-  const terminalEl = document.getElementById('terminal');
-  const promptEl = document.getElementById('prompt');
-
-  const STORAGE_KEY = 'tronUserName';
-
-  let savedName = localStorage.getItem(STORAGE_KEY);
-  let userName = savedName ? savedName : 'USER';
-  let waitingUserName = !savedName;
-
-  const helpMessage = `Commandes disponibles:
-- scan flynn
-- patch clu
-- reboot isos
-- reset (ou restart) : recommencer la session
-Tape ta commande et appuie sur Entrée.`;
-
-  function printOutput(text) {
-    const div = document.createElement('div');
-    div.className = 'output';
-    div.textContent = text;
-    outputEl.appendChild(div);
-    terminalEl.scrollTop = terminalEl.scrollHeight;
-  }
-
-  if (waitingUserName) {
-    promptEl.textContent = '';
-    inputEl.placeholder = 'Entrez votre nom d’utilisateur...';
-  } else {
-    promptEl.textContent = `${userName}>`;
-    printOutput(`Greetings ${userName}, welcome back to the Grid.`);
-    printOutput(helpMessage);
-  }
-
-  const responses = {
-    'scan flynn': `[SCAN] Analyse de Sam Flynn en cours...
-Program status: ACTIVE
-No anomalies detected.
-Awaiting further commands.`,
-
-    'patch clu': `[PATCH] Tentative de correction du programme CLU...
-Warning: Integrity check failed.
-Patch aborted. CLU remains a threat.`,
-
-    'reboot isos': `[REBOOT] Redémarrage des programmes ISOs...
-System stable.
-ISOs synchronized with mainframe.`,
-
-    'help': helpMessage,
-    '': ''
-  };
-
-  function processCommand(cmd) {
-    cmd = cmd.trim().toLowerCase();
-    if (responses[cmd] !== undefined) {
-      printOutput(`${userName}> ${cmd}`);
-      printOutput(responses[cmd]);
-    } else {
-      printOutput(`${userName}> ${cmd}`);
-      printOutput(`[ERROR] Commande inconnue: "${cmd}". Tape "help" pour la liste.`);
-    }
-  }
-
-  inputEl.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      const cmd = inputEl.value.trim();
-      inputEl.value = '';
-
-      if (waitingUserName) {
-        if (cmd.length > 0) {
-          userName = cmd.toUpperCase();
-          localStorage.setItem(STORAGE_KEY, userName);
-        }
-        printOutput(`Greetings ${userName}, welcome to the Grid.`);
-        printOutput(helpMessage);
-        waitingUserName = false;
-        promptEl.textContent = `${userName}>`;
-        inputEl.placeholder = '';
-      } else {
-        if (cmd === 'reset' || cmd === 'restart') {
-          localStorage.removeItem(STORAGE_KEY);
-          location.reload();
-          return;
-        }
-        processCommand(cmd);
-      }
-    }
-  });
-
-  terminalEl.addEventListener('click', () => {
-    inputEl.focus();
-  });
-</script>
-
-<audio id="ambient-sound" src="SOUNDS/Ambiant - Yout.mp3" loop autoplay></audio>
-<script>
-  const audio = document.getElementById('ambient-sound');
-  audio.volume = 0.15;
-  function tryPlayAudio() {
-    audio.play().then(() => {
-      audio.muted = false;
-    }).catch(() => {
-      document.body.addEventListener('click', () => {
-        audio.play();
-        audio.muted = false;
-      }, { once: true });
-    });
-  }
-  tryPlayAudio();
-</script>
-  <script>
   (function() {
     const outputEl = document.getElementById('output');
     const inputEl = document.getElementById('cmdline');
@@ -241,9 +128,11 @@ ISOs synchronized with mainframe.`,
     let savedName = localStorage.getItem(STORAGE_KEY);
     let userName = savedName ? savedName : 'USER';
     let waitingUserName = !savedName;
-    let gameStage = 'start'; // gestion progression
 
-    // Liste complète des commandes (avec casse "canonique")
+    // Étapes de progression dans l’histoire
+    let gameStage = 'start';
+
+    // Liste des commandes, casse canonique (exacte)
     const allCommands = {
       enterGrid: 'enterGrid()',
       initializeUser: 'initializeUser()',
@@ -254,10 +143,11 @@ ISOs synchronized with mainframe.`,
       pacifyCombat: 'pacifyCombat()',
       proceedToCLU: 'proceedToCLU()',
       reset: 'reset',
-      restart: 'restart'
+      restart: 'restart',
+      help: 'help'
     };
 
-    // commandes valides selon étape (chaque étape a une liste de clés de allCommands)
+    // Commandes valides selon étape
     const commandsByStage = {
       start: [allCommands.enterGrid],
       awaitInitialize: [allCommands.initializeUser],
@@ -267,17 +157,6 @@ ISOs synchronized with mainframe.`,
       final: [allCommands.proceedToCLU],
     };
 
-    function getHelpMessage() {
-      if (waitingUserName) {
-        return 'Entrez votre nom d’utilisateur...';
-      }
-      // on affiche les commandes de l'étape + reset/restart
-      const cmds = commandsByStage[gameStage] || [];
-      let cmdsList = cmds.map(c => `- ${c}`).join('\n');
-      cmdsList += '\n- reset\n- restart';
-      return `Commandes disponibles :\n${cmdsList}`;
-    }
-
     function printOutput(text) {
       const div = document.createElement('div');
       div.className = 'output';
@@ -286,15 +165,18 @@ ISOs synchronized with mainframe.`,
       terminalEl.scrollTop = terminalEl.scrollHeight;
     }
 
-    function initializeConsole() {
+    function getPrompt() {
+      return waitingUserName ? '' : `${userName}>`;
+    }
+
+    function getHelpMessage() {
       if (waitingUserName) {
-        promptEl.textContent = '';
-        inputEl.placeholder = 'Entrez votre nom d’utilisateur...';
-      } else {
-        promptEl.textContent = `${userName}>`;
-        printOutput(`Greetings ${userName}, bienvenue dans la Grille.`);
-        printOutput(getHelpMessage());
+        return 'Entrez votre nom d’utilisateur...';
       }
+      const cmds = commandsByStage[gameStage] || [];
+      let cmdsList = cmds.map(c => `- ${c}`).join('\n');
+      cmdsList += '\n- help\n- reset\n- restart';
+      return `Commandes disponibles :\n${cmdsList}`;
     }
 
     function equalsCommand(inputCmd, validCmd) {
@@ -309,20 +191,25 @@ ISOs synchronized with mainframe.`,
           userName = cmd.toUpperCase();
           localStorage.setItem(STORAGE_KEY, userName);
           waitingUserName = false;
-          promptEl.textContent = `${userName}>`;
+          promptEl.textContent = getPrompt();
           printOutput(`Greetings ${userName}, bienvenue dans la Grille.`);
           printOutput(getHelpMessage());
         }
         return;
       }
 
-      if (cmd.toLowerCase() === 'reset' || cmd.toLowerCase() === 'restart') {
+      if (cmd.toLowerCase() === allCommands.reset || cmd.toLowerCase() === allCommands.restart) {
         localStorage.removeItem(STORAGE_KEY);
         location.reload();
         return;
       }
 
-      const validCmds = (commandsByStage[gameStage] || []).map(c => c.toLowerCase()).concat(['reset', 'restart']);
+      if (cmd.toLowerCase() === allCommands.help) {
+        printOutput(getHelpMessage());
+        return;
+      }
+
+      const validCmds = (commandsByStage[gameStage] || []).map(c => c.toLowerCase()).concat(['help', 'reset', 'restart']);
 
       if (!validCmds.includes(cmd.toLowerCase())) {
         printOutput(`${userName}> ${rawCmd}`);
@@ -382,52 +269,59 @@ ISOs synchronized with mainframe.`,
             printOutput('[Résultat] : Combat lancé. Rinzler neutralise Sam sans le derezzer.');
             printOutput('[Conséquence] : Sam est capturé et emmené vers CLU.');
             printOutput('▶ Chargement du processus de rencontre avec CLU...');
-            printOutput('Commandes disponibles : - proceedToCLU() - reset - restart');
+            printOutput('Commandes disponibles : - proceedToCLU');
             gameStage = 'final';
           } else if (equalsCommand(cmd, allCommands.derezzOpponent)) {
-            printOutput('[ALERTE] Vous tentez une attaque létale sur Rinzler...');
-            printOutput('[Échec critique] : Le disque est dévié. Sam est désarmé.');
-            printOutput('[Conséquence] : Rinzler riposte brutalement. Sam est gravement blessé.');
-            printOutput('▶ FIN ALTERNATIVE : Sam est derezzé prématurément.');
-            printOutput('Commandes disponibles : - restart');
+            printOutput('[Résultat] : Tentative d\'éradication de Rinzler échouée.');
+            printOutput('[Conséquence] : Combat engagé, forte résistance détectée.');
+            printOutput('Retentez une autre commande.');
           } else if (equalsCommand(cmd, allCommands.pacifyCombat)) {
-            printOutput('[Action] : Tentative de dialogue pacifique... rejetée par Rinzler.');
-            printOutput('[Système] : Les règles du jeu n’autorisent pas la reddition.');
-            printOutput('[Conséquence] : Sam est capturé sans violence.');
-            printOutput('▶ Chargement de la scène suivante...');
-            printOutput('Commandes disponibles : - proceedToCLU() - reset - restart');
+            printOutput('[Résultat] : Tentative de paix acceptée par Rinzler.');
+            printOutput('[Conséquence] : Passage sécurisé vers la prochaine zone.');
+            printOutput('Commandes disponibles : - proceedToCLU');
             gameStage = 'final';
           }
           break;
 
-        default:
-          printOutput('[ERROR] Commande inconnue ou hors contexte.');
+        case 'final':
+          if (equalsCommand(cmd, allCommands.proceedToCLU)) {
+            printOutput('[Chargement] Rencontre avec CLU activée...');
+            printOutput('Simulation terminée. Merci d\'avoir joué.');
+            gameStage = 'end';
+            inputEl.disabled = true;
+          }
           break;
-      }
 
-      printOutput(getHelpMessage());
+        default:
+          printOutput('[INFO] Aucun scénario disponible.');
+      }
+    }
+
+    function init() {
+      if (waitingUserName) {
+        printOutput('Bienvenue dans la Grille TRON. Veuillez saisir votre nom d’utilisateur :');
+        promptEl.textContent = '';
+      } else {
+        promptEl.textContent = getPrompt();
+        printOutput(`Bienvenue ${userName} ! Tapez "help" pour la liste des commandes.`);
+      }
+      inputEl.focus();
     }
 
     inputEl.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
-        e.preventDefault();
-        const cmd = inputEl.value.trim();
+        const inputVal = inputEl.value;
         inputEl.value = '';
-
-        if (cmd.toLowerCase() === 'help') {
-          printOutput(getHelpMessage());
-          return;
-        }
-
-        processCommand(cmd);
+        processCommand(inputVal);
       }
     });
 
+    // Focus input si clic sur terminal
     terminalEl.addEventListener('click', () => {
       inputEl.focus();
     });
 
-    initializeConsole();
+    init();
   })();
 </script>
 </body>
