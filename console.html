@@ -3,231 +3,221 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>TRON Console Prototype</title>
+<title>Console TRON Test</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
-
-  html, body {
+  body {
+    background: #000;
+    color: #0ff;
+    font-family: "Courier New", Courier, monospace;
     margin: 0;
-    padding: 0;
-    background: #000000;
-    color: #00ffff;
-    font-family: 'Share Tech Mono', monospace;
-    overflow: hidden;
-    height: 100%;
-    user-select: none;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    height: 100vh;
   }
-
-  #logo-container {
-    text-align: center;
-    margin: 1rem 0;
-  }
-
-  #logo-container img {
-    max-width: 50vw;
-    height: auto;
-  }
-
-  #terminal {
-    width: 90vw;
-    max-width: 900px;
-    height: 65vh;
-    background: #000011;
-    border: 2px solid #00ffff;
-    padding: 1rem;
+  #console-wrapper {
+    flex: 1;
     overflow-y: auto;
-    box-shadow: 0 0 10px #00ffff;
+    padding: 10px;
+    box-sizing: border-box;
+  }
+  #output {
     white-space: pre-wrap;
+  }
+  .output {
+    margin-bottom: 6px;
+  }
+  #input-line {
     display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
+    border-top: 1px solid #0ff;
+    padding: 8px 10px;
   }
-
-  .input-line {
-    display: flex;
-    margin-top: auto;
-    margin-bottom: 0.5rem;
+  #prompt {
+    user-select: none;
+    margin-right: 5px;
   }
-
-  .prompt {
-    color: #00ffea;
-    margin-right: 0.5rem;
-    white-space: nowrap;
-  }
-
   #cmdline {
     background: transparent;
     border: none;
-    color: #00ffff;
     outline: none;
-    flex-grow: 1;
-    font-family: 'Share Tech Mono', monospace;
+    color: #0ff;
+    font-family: "Courier New", Courier, monospace;
     font-size: 1rem;
-  }
-
-  .output {
-    margin-bottom: 1rem;
-    line-height: 1.3;
-    word-wrap: break-word;
-  }
-
-  @keyframes blink {
-    0%, 50% { opacity: 1; }
-    50.01%, 100% { opacity: 0; }
-  }
-
-  #cursor {
-    display: inline-block;
-    width: 10px;
-    background: #00ffff;
-    margin-left: 2px;
-    animation: blink 1s steps(2, start) infinite;
-  }
-
-  @media (max-width: 600px) {
-    #logo-container img {
-      max-width: 80vw;
-    }
-
-    #terminal {
-      height: 60vh;
-    }
-
-    #cmdline {
-      font-size: 0.9rem;
-    }
+    flex: 1;
   }
 </style>
 </head>
 <body>
-  <div id="logo-container">
-    <img src="LOGO/Encom.jpg" alt="Logo ENCOM" />
-  </div>
-
-  <div id="terminal" tabindex="0" aria-label="Console TRON interactive">
+  <div id="console-wrapper">
     <div id="output"></div>
-    <div class="input-line">
-      <span class="prompt" id="prompt">USER&gt;</span>
-      <input type="text" id="cmdline" autocomplete="off" autofocus />
-      <span id="cursor"></span>
-    </div>
+  </div>
+  <div id="input-line">
+    <div id="prompt"></div>
+    <input id="cmdline" autocomplete="off" autofocus spellcheck="false" />
   </div>
 
 <script>
+(() => {
   const outputEl = document.getElementById('output');
   const inputEl = document.getElementById('cmdline');
-  const terminalEl = document.getElementById('terminal');
   const promptEl = document.getElementById('prompt');
+  const STORAGE_KEY = 'tronUserNameTest';
 
-  const STORAGE_KEY = 'tronUserName';
+  let userName = localStorage.getItem(STORAGE_KEY) || null;
+  let waitingUserName = !userName;
 
-  let savedName = localStorage.getItem(STORAGE_KEY);
-  let userName = savedName ? savedName : 'USER';
-  let waitingUserName = !savedName;
-
-  const helpMessage = `Commandes disponibles:
-- scan flynn
-- patch clu
-- reboot isos
-- reset (ou restart) : recommencer la session
-Tape ta commande et appuie sur Entrée.`;
+  // États du scénario
+  let stage = 0;  // 0: attente nom ou enterGrid, 1: initializeUser, 2: runSecurityScan, 3: loadDiscWars, 4: choix canonProtocol, 5: fin canon
+  let branchCanonDone = false;
 
   function printOutput(text) {
     const div = document.createElement('div');
     div.className = 'output';
     div.textContent = text;
     outputEl.appendChild(div);
-    terminalEl.scrollTop = terminalEl.scrollHeight;
+    outputEl.parentElement.scrollTop = outputEl.parentElement.scrollHeight;
   }
 
-  if (waitingUserName) {
-    promptEl.textContent = '';
-    inputEl.placeholder = 'Entrez votre nom d’utilisateur...';
-  } else {
-    promptEl.textContent = `${userName}>`;
-    printOutput(`Greetings ${userName}, welcome back to the Grid.`);
-    printOutput(helpMessage);
+  function updatePrompt() {
+    promptEl.textContent = userName ? `${userName}>` : '';
   }
 
-  const responses = {
-    'scan flynn': `[SCAN] Analyse de Sam Flynn en cours...
-Program status: ACTIVE
-No anomalies detected.
-Awaiting further commands.`,
+  function getAvailableCommands() {
+    if (waitingUserName) return ['enterGrid();', 'reset', 'restart'];
+    switch(stage) {
+      case 0: return ['enterGrid();', 'reset', 'restart'];
+      case 1: return ['initializeUser();', 'reset', 'restart'];
+      case 2: return ['runSecurityScan();', 'reset', 'restart'];
+      case 3: return ['loadDiscWars();', 'reset', 'restart'];
+      case 4:
+        return branchCanonDone
+          ? ['proceedToCLU();', 'reset', 'restart']
+          : ['canonProtocol();', 'reset', 'restart'];
+      case 5: return ['reset', 'restart'];
+      default: return ['reset', 'restart'];
+    }
+  }
 
-    'patch clu': `[PATCH] Tentative de correction du programme CLU...
-Warning: Integrity check failed.
-Patch aborted. CLU remains a threat.`,
+  function showHelp() {
+    const cmds = getAvailableCommands().join('\n- ');
+    printOutput(`Commandes disponibles :\n- ${cmds}`);
+  }
 
-    'reboot isos': `[REBOOT] Redémarrage des programmes ISOs...
-System stable.
-ISOs synchronized with mainframe.`,
-
-    'help': helpMessage,
-    '': ''
-  };
+  function resetSession() {
+    localStorage.removeItem(STORAGE_KEY);
+    location.reload();
+  }
 
   function processCommand(cmd) {
-    cmd = cmd.trim().toLowerCase();
-    if (responses[cmd] !== undefined) {
-      printOutput(`${userName}> ${cmd}`);
-      printOutput(responses[cmd]);
-    } else {
-      printOutput(`${userName}> ${cmd}`);
-      printOutput(`[ERROR] Commande inconnue: "${cmd}". Tape "help" pour la liste.`);
+    cmd = cmd.trim();
+    if (cmd === '') return;
+
+    if (cmd === 'reset' || cmd === 'restart') {
+      resetSession();
+      return;
     }
+
+    if (waitingUserName) {
+      // Enregistrement du nom utilisateur
+      userName = cmd.toUpperCase();
+      localStorage.setItem(STORAGE_KEY, userName);
+      waitingUserName = false;
+      stage = 0;
+      updatePrompt();
+      printOutput(`Bienvenue ${userName}, vous entrez dans la Grille TRON.`);
+      showHelp();
+      return;
+    }
+
+    printOutput(`${userName}> ${cmd}`);
+
+    switch(stage) {
+      case 0:
+        if (cmd === 'enterGrid();') {
+          printOutput('[Connexion établie...]');
+          printOutput('[Localisation] Grille détectée : Univers système_12.8');
+          stage = 1;
+          showHelp();
+        } else {
+          printOutput(`[ERROR] Commande inconnue à cette étape : "${cmd}"`);
+          showHelp();
+        }
+        break;
+      case 1:
+        if (cmd === 'initializeUser();') {
+          printOutput('[Système] Attribution du disque d\'identité...');
+          printOutput('[Résultat] : Disque affecté à : SAM_FLYNN');
+          stage = 2;
+          showHelp();
+        } else {
+          printOutput(`[ERROR] Commande inconnue à cette étape : "${cmd}"`);
+          showHelp();
+        }
+        break;
+      case 2:
+        if (cmd === 'runSecurityScan();') {
+          printOutput('[Système] Scan complet. Statut : ANOMALIE.');
+          printOutput('[ALERTE] Utilisateur non conforme. Reroutage vers l’arène de jeu...');
+          stage = 3;
+          showHelp();
+        } else {
+          printOutput(`[ERROR] Commande inconnue à cette étape : "${cmd}"`);
+          showHelp();
+        }
+        break;
+      case 3:
+        if (cmd === 'loadDiscWars();') {
+          printOutput('[Épreuve] Disc Wars — Adversaire : Classe élite | Identité : RINZLER');
+          printOutput('> Statut de SAM : inexpérimenté');
+          printOutput('> Victoire peu probable');
+          printOutput('Choisissez votre protocole de réaction :');
+          printOutput('1. canonProtocol();     // Suivre le film : Sam est vaincu mais capturé');
+          stage = 4;
+          showHelp();
+        } else {
+          printOutput(`[ERROR] Commande inconnue à cette étape : "${cmd}"`);
+          showHelp();
+        }
+        break;
+      case 4:
+        if (cmd === 'canonProtocol();') {
+          printOutput('[Résultat] : Combat lancé. Rinzler neutralise Sam sans le derezzer.');
+          printOutput('[Conséquence] : Sam est capturé et emmené vers CLU.');
+          branchCanonDone = true;
+          stage = 5;
+          showHelp();
+        } else {
+          printOutput(`[ERROR] Commande inconnue à cette étape : "${cmd}"`);
+          showHelp();
+        }
+        break;
+      case 5:
+        printOutput('Fin de la séquence canon TRON. Tapez reset ou restart pour recommencer.');
+        break;
+      default:
+        printOutput(`[ERROR] État inattendu : "${stage}"`);
+        showHelp();
+        break;
+    }
+  }
+
+  // Initialisation
+  updatePrompt();
+
+  if (waitingUserName) {
+    printOutput('Veuillez entrer votre nom d\'utilisateur (ex : SAM_FLYNN) :');
+  } else {
+    printOutput(`Bienvenue ${userName}, tapez "enterGrid();" pour commencer.`);
+    showHelp();
   }
 
   inputEl.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
-      e.preventDefault();
-      const cmd = inputEl.value.trim();
+      const cmd = inputEl.value;
       inputEl.value = '';
-
-      if (waitingUserName) {
-        if (cmd.length > 0) {
-          userName = cmd.toUpperCase();
-          localStorage.setItem(STORAGE_KEY, userName);
-        }
-        printOutput(`Greetings ${userName}, welcome to the Grid.`);
-        printOutput(helpMessage);
-        waitingUserName = false;
-        promptEl.textContent = `${userName}>`;
-        inputEl.placeholder = '';
-      } else {
-        if (cmd === 'reset' || cmd === 'restart') {
-          localStorage.removeItem(STORAGE_KEY);
-          location.reload();
-          return;
-        }
-        processCommand(cmd);
-      }
+      processCommand(cmd);
     }
   });
-
-  terminalEl.addEventListener('click', () => {
-    inputEl.focus();
-  });
-</script>
-
-<audio id="ambient-sound" src="SOUNDS/Ambiant - Yout.mp3" loop autoplay></audio>
-<script>
-  const audio = document.getElementById('ambient-sound');
-  audio.volume = 0.15;
-  function tryPlayAudio() {
-    audio.play().then(() => {
-      audio.muted = false;
-    }).catch(() => {
-      document.body.addEventListener('click', () => {
-        audio.play();
-        audio.muted = false;
-      }, { once: true });
-    });
-  }
-  tryPlayAudio();
+})();
 </script>
 </body>
 </html>
