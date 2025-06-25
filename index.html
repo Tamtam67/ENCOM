@@ -107,7 +107,7 @@
 
   const responses = {
     'scan flynn': 
-`[SCAN] Analyse de Sam Flynn en cours...
+`[SCAN] Analyse de Flynn en cours...
 Program status: ACTIVE
 No anomalies detected.
 Awaiting further commands.`,
@@ -119,7 +119,7 @@ Patch aborted. CLU remains a threat.`,
 
     'reboot isos': 
 `[REBOOT] Redémarrage des programmes ISOs...
-System stable.
+Système stable.
 ISOs synchronized with mainframe.`,
 
     'help':
@@ -143,7 +143,7 @@ Tape ta commande et appuie sur Entrée.`,
   function processCommand(cmd) {
     cmd = cmd.trim().toLowerCase();
     if (responses[cmd] !== undefined) {
-      printOutput('TRON> ' + cmd);
+      printOutput('USER> ' + cmd);
       printOutput(responses[cmd]);
     } else if (cmd === '') {
       // do nothing
