@@ -20,13 +20,13 @@
     height: 100vh;
     padding: 1rem;
     user-select: none;
-    flex-direction: column; /* pour que logo + console soient en colonne */
+    flex-direction: column;
   }
 
   #logo-container {
     text-align: center;
     margin-bottom: 1.5rem;
-    padding-top: 0rem;
+    padding-top: 0;
   }
 
   #logo-container img {
@@ -37,14 +37,14 @@
   #terminal {
     width: 90%;
     max-width: 900px;
-    height: 80vh;
+    height: 70vh;
     background: #000011;
     border: 2px solid #00ffff;
     padding: 1rem;
     overflow-y: auto;
     box-shadow: 0 0 10px #00ffff;
     white-space: pre-wrap;
-    flex-grow: 0; /* pour que le terminal prenne le max d’espace restant */
+    flex-grow: 0;
   }
 
   .input-line {
@@ -88,13 +88,13 @@
 </head>
 <body>
   <div id="logo-container">
-    <img src="LOGO/Encom.jpg" alt="Logo ENCOM" />
+    <img src="LOGO/encom.png" alt="Logo ENCOM" />
   </div>
 
   <div id="terminal" tabindex="0" aria-label="Console TRON interactive">
     <div id="output"></div>
     <div class="input-line">
-      <span class="prompt">TRON&gt;</span>
+      <span class="prompt" id="prompt">USER&gt;</span>
       <input type="text" id="cmdline" autocomplete="off" autofocus />
       <span id="cursor"></span>
     </div>
@@ -104,10 +104,28 @@
   const outputEl = document.getElementById('output');
   const inputEl = document.getElementById('cmdline');
   const terminalEl = document.getElementById('terminal');
+  const promptEl = document.getElementById('prompt');
+
+  // Variables pour gérer le nom d'utilisateur
+  let userName = 'USER';
+  let waitingUserName = true; // On commence en attente du nom
+
+  // Au lancement, on affiche rien, juste on demande le nom dans le placeholder et prompt
+  promptEl.textContent = ''; // Pas de prompt au départ
+  inputEl.placeholder = 'Entrez votre nom d’utilisateur...';
+  inputEl.focus();
+
+  function printOutput(text) {
+    const div = document.createElement('div');
+    div.className = 'output';
+    div.textContent = text;
+    outputEl.appendChild(div);
+    terminalEl.scrollTop = terminalEl.scrollHeight;
+  }
 
   const responses = {
     'scan flynn': 
-`[SCAN] Analyse de Flynn en cours...
+`[SCAN] Analyse de Sam Flynn en cours...
 Program status: ACTIVE
 No anomalies detected.
 Awaiting further commands.`,
@@ -119,7 +137,7 @@ Patch aborted. CLU remains a threat.`,
 
     'reboot isos': 
 `[REBOOT] Redémarrage des programmes ISOs...
-Système stable.
+System stable.
 ISOs synchronized with mainframe.`,
 
     'help':
@@ -132,23 +150,15 @@ Tape ta commande et appuie sur Entrée.`,
     '': ''
   };
 
-  function printOutput(text) {
-    const div = document.createElement('div');
-    div.className = 'output';
-    div.textContent = text;
-    outputEl.appendChild(div);
-    terminalEl.scrollTop = terminalEl.scrollHeight;
-  }
-
   function processCommand(cmd) {
     cmd = cmd.trim().toLowerCase();
     if (responses[cmd] !== undefined) {
-      printOutput('USER> ' + cmd);
+      printOutput(`${userName}> ${cmd}`);
       printOutput(responses[cmd]);
     } else if (cmd === '') {
-      // do nothing
+      // ne rien faire sur entrée vide
     } else {
-      printOutput('TRON> ' + cmd);
+      printOutput(`${userName}> ${cmd}`);
       printOutput(`[ERROR] Commande inconnue: "${cmd}". Tape "help" pour la liste.`);
     }
   }
@@ -156,20 +166,28 @@ Tape ta commande et appuie sur Entrée.`,
   inputEl.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      const cmd = inputEl.value;
+      const cmd = inputEl.value.trim();
       inputEl.value = '';
-      processCommand(cmd);
+
+      if (waitingUserName) {
+        if (cmd.length > 0) {
+          userName = cmd.toUpperCase();
+        }
+        // Message de bienvenue personnalisé
+        printOutput(`Greetings ${userName}, welcome to the Grid.`);
+        waitingUserName = false;
+        promptEl.textContent = `${userName}>`;
+        inputEl.placeholder = '';
+      } else {
+        processCommand(cmd);
+      }
     }
   });
 
-  // Focus input when clicking anywhere on terminal
+  // Focus input quand on clique sur le terminal
   terminalEl.addEventListener('click', () => {
     inputEl.focus();
   });
-
-  // Initial help message
-  printOutput(`Bienvenue dans la console TRON.
-Tape "help" pour la liste des commandes.`);
 </script>
 </body>
 </html>
