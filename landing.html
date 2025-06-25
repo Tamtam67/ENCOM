@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>TRON Loading</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+    body {
+      background-color: #000011;
+      color: #00ffff;
+      font-family: 'Share Tech Mono', monospace;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2em;
+      margin-bottom: 1rem;
+      text-shadow: 0 0 10px #00ffff;
+    }
+
+    p {
+      font-size: 1em;
+      margin-bottom: 2rem;
+      max-width: 600px;
+    }
+
+    button {
+      background: transparent;
+      border: 2px solid #00ffff;
+      color: #00ffff;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 1rem;
+      padding: 0.75rem 1.5rem;
+      cursor: pointer;
+      transition: background 0.3s, color 0.3s;
+      box-shadow: 0 0 10px #00ffff;
+    }
+
+    button:hover {
+      background: #00ffff;
+      color: #000011;
+    }
+
+    #logo {
+      max-width: 300px;
+      margin-bottom: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <img id="logo" src="LOGO/Encom.jpg" alt="ENCOM Logo">
+  <h1>Bienvenue dans le système ENCOM</h1>
+  <p>Ce site contient des effets sonores. Pour une immersion complète, utilisez un casque ou activez le son.</p>
+  <button onclick="enter()">Entrer dans la Grille</button>
+
+  <script>
+    function enter() {
+      window.location.href = "index.html";
+    }
+  </script>
+</body>
+</html>
