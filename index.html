@@ -113,6 +113,14 @@
   let userName = savedName ? savedName : 'USER';
   let waitingUserName = !savedName;
 
+  // Messages d'aide
+  const helpMessage = `Commandes disponibles:
+- scan flynn
+- patch clu
+- reboot isos
+- reset (ou restart) : recommencer la session
+Tape ta commande et appuie sur Entrée.`;
+  
   // Initialisation du terminal selon si on a un nom sauvegardé
   if (waitingUserName) {
     promptEl.textContent = '';
