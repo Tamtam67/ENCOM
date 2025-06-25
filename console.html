@@ -244,40 +244,25 @@ ISOs synchronized with mainframe.`,
     let waitingUserName = !savedName;
     let gameStage = 'start'; // pour gérer la progression
 
+    // Commandes possibles selon étape (avec casse "canonique")
+    const commandsByStage = {
+      start: ['enterGrid()'],
+      awaitInitialize: ['initializeUser()'],
+      afterInitialize: ['runSecurityScan()'],
+      afterScan: ['loadDiscWars()'],
+      discWars: ['canonProtocol()', 'derezzOpponent()', 'pacifyCombat()'],
+      final: []
+    };
+
     // Message d'aide dynamique selon l'état
     function getHelpMessage() {
       if (waitingUserName) {
         return 'Entrez votre nom d’utilisateur...';
       }
-      switch(gameStage) {
-        case 'start':
-          return `Commandes disponibles :
-- enterGrid()
-- initializeUser()
-- reset
-- restart`;
-        case 'afterInitialize':
-          return `Commandes disponibles :
-- runSecurityScan()
-- reset
-- restart`;
-        case 'afterScan':
-          return `Commandes disponibles :
-- loadDiscWars()
-- reset
-- restart`;
-        case 'discWars':
-          return `Commandes disponibles :
-- canonProtocol()
-- derezzOpponent()
-- pacifyCombat()
-- reset
-- restart`;
-        default:
-          return `Commandes disponibles :
-- reset
-- restart`;
-      }
+      const cmds = commandsByStage[gameStage] || [];
+      const cmdList = cmds.length > 0 ? cmds.map(c => `- ${c}`).join('\n') : '';
+      const resetCmds = '- reset\n- restart';
+      return `Commandes disponibles :\n${cmdList}\n${resetCmds}`;
     }
 
     // Fonction pour afficher du texte dans la console
@@ -301,9 +286,15 @@ ISOs synchronized with mainframe.`,
       }
     }
 
+    // Fonction utilitaire pour comparer commandes sans casse
+    function equalsCommand(inputCmd, validCmd) {
+      return inputCmd.toLowerCase() === validCmd.toLowerCase();
+    }
+
     // Traitement des commandes selon le scénario
-    function processCommand(cmd) {
-      cmd = cmd.trim().toLowerCase();
+    function processCommand(rawCmd) {
+      const cmd = rawCmd.trim();
+
       if(waitingUserName) {
         if(cmd.length > 0) {
           userName = cmd.toUpperCase();
@@ -316,10 +307,28 @@ ISOs synchronized with mainframe.`,
         return;
       }
 
+      // Pour reset/restart
+      if(cmd.toLowerCase() === 'reset' || cmd.toLowerCase() === 'restart') {
+        localStorage.removeItem(STORAGE_KEY);
+        location.reload();
+        return;
+      }
+
+      // Valide si la commande fait partie des commandes valides à cette étape (insensible à la casse)
+      const validCmds = commandsByStage[gameStage].map(c => c.toLowerCase());
+
+      if (!validCmds.includes(cmd.toLowerCase())) {
+        printOutput(`${userName}> ${rawCmd}`);
+        printOutput('[ERROR] Commande inconnue ou hors contexte. Tapez "help" pour la liste des commandes valides.');
+        return;
+      }
+
+      printOutput(`${userName}> ${rawCmd}`);
+
+      // Scénario par étape
       switch(gameStage) {
         case 'start':
-          if(cmd === 'entergrid()') {
-            printOutput(`${userName}> ${cmd}`);
+          if(equalsCommand(cmd, 'enterGrid()')) {
             printOutput('[Connexion établie...]');
             printOutput('[Localisation] Grille détectée : Univers système_12.8');
             printOutput('[Système] Numérisation en cours...');
@@ -327,45 +336,30 @@ ISOs synchronized with mainframe.`,
             printOutput('▶ Action disponible :');
             printOutput('- initializeUser();  // Générer une identité pour l\'utilisateur');
             gameStage = 'awaitInitialize';
-            printOutput(getHelpMessage());
-          } else {
-            printOutput(`${userName}> ${cmd}`);
-            printOutput(`[ERROR] Commande inconnue ou hors contexte. Tapez "enterGrid()" pour commencer.`);
           }
           break;
 
         case 'awaitInitialize':
-          if(cmd === 'initializeuser()') {
-            printOutput(`${userName}> ${cmd}`);
+          if(equalsCommand(cmd, 'initializeUser()')) {
             printOutput('[Système] Attribution du disque d\'identité...');
             printOutput('[Résultat] : Disque affecté à : SAM_FLYNN');
             printOutput('▶ Action suivante :');
             printOutput('- runSecurityScan();  // Sécurité en cours');
             gameStage = 'afterInitialize';
-            printOutput(getHelpMessage());
-          } else {
-            printOutput(`${userName}> ${cmd}`);
-            printOutput('[ERROR] Commande inconnue. Tapez "initializeUser()" pour continuer.');
           }
           break;
 
         case 'afterInitialize':
-          if(cmd === 'runsecurityscan()') {
-            printOutput(`${userName}> ${cmd}`);
+          if(equalsCommand(cmd, 'runSecurityScan()')) {
             printOutput('[Système] Scan complet. Statut : ANOMALIE.');
             printOutput('[ALERTE] Utilisateur non conforme. Reroutage vers l’arène de jeu...');
             printOutput('▶ Téléportation en cours vers : Disc Wars');
             gameStage = 'afterScan';
-            printOutput(getHelpMessage());
-          } else {
-            printOutput(`${userName}> ${cmd}`);
-            printOutput('[ERROR] Commande inconnue. Tapez "runSecurityScan()" pour continuer.');
           }
           break;
 
         case 'afterScan':
-          if(cmd === 'loaddiscwars()') {
-            printOutput(`${userName}> ${cmd}`);
+          if(equalsCommand(cmd, 'loadDiscWars()')) {
             printOutput('[Épreuve] Disc Wars — Adversaire : Classe élite | Identité : RINZLER');
             printOutput('> Statut de SAM : inexpérimenté');
             printOutput('> Victoire peu probable');
@@ -374,49 +368,40 @@ ISOs synchronized with mainframe.`,
             printOutput('2. derezzOpponent();    // Vous tentez de tuer Rinzler');
             printOutput('3. pacifyCombat();      // Vous tentez une sortie pacifique');
             gameStage = 'discWars';
-            printOutput(getHelpMessage());
-          } else {
-            printOutput(`${userName}> ${cmd}`);
-            printOutput('[ERROR] Commande inconnue. Tapez "loadDiscWars()" pour continuer.');
           }
           break;
 
         case 'discWars':
-          if(cmd === 'canonprotocol()') {
-            printOutput(`${userName}> ${cmd}`);
+          if(equalsCommand(cmd, 'canonProtocol()')) {
             printOutput('[Résultat] : Combat lancé. Rinzler neutralise Sam sans le derezzer.');
             printOutput('[Conséquence] : Sam est capturé et emmené vers CLU.');
             printOutput('▶ Chargement du processus de rencontre avec CLU...');
             printOutput('Commandes disponibles : - proceedToCLU() - reset - restart');
-            // On peut ajouter la suite plus tard
+            gameStage = 'final';
           }
-          else if(cmd === 'derezzopponent()') {
-            printOutput(`${userName}> ${cmd}`);
+          else if(equalsCommand(cmd, 'derezzOpponent()')) {
             printOutput('[ALERTE] Vous tentez une attaque létale sur Rinzler...');
             printOutput('[Échec critique] : Le disque est dévié. Sam est désarmé.');
             printOutput('[Conséquence] : Rinzler riposte brutalement. Sam est gravement blessé.');
             printOutput('▶ FIN ALTERNATIVE : Sam est derezzé prématurément.');
             printOutput('Commandes disponibles : - restart');
           }
-          else if(cmd === 'pacifycombat()') {
-            printOutput(`${userName}> ${cmd}`);
+          else if(equalsCommand(cmd, 'pacifyCombat()')) {
             printOutput('[Action] : Tentative de dialogue pacifique... rejetée par Rinzler.');
             printOutput('[Système] : Les règles du jeu n’autorisent pas la reddition.');
             printOutput('[Conséquence] : Sam est capturé sans violence.');
             printOutput('▶ Chargement de la scène suivante...');
             printOutput('Commandes disponibles : - proceedToCLU() - reset - restart');
-          }
-          else {
-            printOutput(`${userName}> ${cmd}`);
-            printOutput('[ERROR] Commande inconnue. Choisissez canonProtocol(), derezzOpponent() ou pacifyCombat().');
+            gameStage = 'final';
           }
           break;
 
         default:
-          printOutput(`${userName}> ${cmd}`);
           printOutput('[ERROR] Commande inconnue ou hors contexte.');
           break;
       }
+
+      printOutput(getHelpMessage());
     }
 
     // Gestion de l'entrée utilisateur
@@ -426,9 +411,8 @@ ISOs synchronized with mainframe.`,
         const cmd = inputEl.value.trim();
         inputEl.value = '';
 
-        if (cmd === 'reset' || cmd === 'restart') {
-          localStorage.removeItem(STORAGE_KEY);
-          location.reload();
+        if(cmd.toLowerCase() === 'help') {
+          printOutput(getHelpMessage());
           return;
         }
 
