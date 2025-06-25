@@ -20,6 +20,18 @@
     height: 100vh;
     padding: 1rem;
     user-select: none;
+    flex-direction: column; /* pour que logo + console soient en colonne */
+  }
+
+  #logo-container {
+    text-align: center;
+    margin-bottom: 1rem;
+    padding-top: 1rem;
+  }
+
+  #logo-container img {
+    max-width: 200px;
+    height: auto;
   }
 
   #terminal {
@@ -32,6 +44,7 @@
     overflow-y: auto;
     box-shadow: 0 0 10px #00ffff;
     white-space: pre-wrap;
+    flex-grow: 1; /* pour que le terminal prenne le max d’espace restant */
   }
 
   .input-line {
@@ -74,6 +87,10 @@
 </style>
 </head>
 <body>
+  <div id="logo-container">
+    <img src="main/LOGO/Encom.jpg" alt="Logo ENCOM" />
+  </div>
+
   <div id="terminal" tabindex="0" aria-label="Console TRON interactive">
     <div id="output"></div>
     <div class="input-line">
