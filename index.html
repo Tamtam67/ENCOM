@@ -204,5 +204,24 @@ ISOs synchronized with mainframe.`,
     inputEl.focus();
   });
 </script>
+  <audio id="ambient-sound" src="SOUNDS/Ambiant - Yout.mp3" loop autoplay muted></audio>
+<script>
+  // Essaie de démarrer le son, puis dé-mute si possible (interaction utilisateur requise sur certains navigateurs)
+  const audio = document.getElementById('ambient-sound');
+  audio.volume = 0.15; // volume discret
+  // Démarrer après interaction utilisateur (navigateurs limitent autoplay avec son)
+  function tryPlayAudio() {
+    audio.play().then(() => {
+      audio.muted = false;
+    }).catch(() => {
+      // Impossible de lancer avant interaction, on attend un clic
+      document.body.addEventListener('click', () => {
+        audio.play();
+        audio.muted = false;
+      }, { once: true });
+    });
+  }
+  tryPlayAudio();
+</script>
 </body>
 </html>
