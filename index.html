@@ -1,4 +1,4 @@
-c<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
@@ -88,7 +88,7 @@ c<!DOCTYPE html>
 </head>
 <body>
   <div id="logo-container">
-    <img src="LOGO/Encom.jpg" alt="Logo ENCOM" />
+    <img src="LOGO/encom.png" alt="Logo ENCOM" />
   </div>
 
   <div id="terminal" tabindex="0" aria-label="Console TRON interactive">
@@ -106,14 +106,23 @@ c<!DOCTYPE html>
   const terminalEl = document.getElementById('terminal');
   const promptEl = document.getElementById('prompt');
 
-  // Variables pour gérer le nom d'utilisateur
-  let userName = 'USER';
-  let waitingUserName = true; // On commence en attente du nom
+  const STORAGE_KEY = 'tronUserName';
 
-  // Au lancement, on affiche rien, juste on demande le nom dans le placeholder et prompt
-  promptEl.textContent = ''; // Pas de prompt au départ
-  inputEl.placeholder = 'Entrez votre nom d’utilisateur...';
-  inputEl.focus();
+  // Récupération du nom sauvegardé (le cas échéant)
+  let savedName = localStorage.getItem(STORAGE_KEY);
+  let userName = savedName ? savedName : 'USER';
+  let waitingUserName = !savedName;
+
+  // Initialisation du terminal selon si on a un nom sauvegardé
+  if (waitingUserName) {
+    promptEl.textContent = '';
+    inputEl.placeholder = 'Entrez votre nom d’utilisateur...';
+  } else {
+    promptEl.textContent = `${userName}>`;
+    printOutput(`Greetings ${userName}, welcome back to the Grid.`);
+    printOutput('Tape "help" pour la liste des commandes.');
+    inputEl.placeholder = '';
+  }
 
   function printOutput(text) {
     const div = document.createElement('div');
@@ -145,6 +154,7 @@ ISOs synchronized with mainframe.`,
 - scan flynn
 - patch clu
 - reboot isos
+- reset (ou restart) : recommencer la session
 Tape ta commande et appuie sur Entrée.`,
 
     '': ''
@@ -172,19 +182,23 @@ Tape ta commande et appuie sur Entrée.`,
       if (waitingUserName) {
         if (cmd.length > 0) {
           userName = cmd.toUpperCase();
+          localStorage.setItem(STORAGE_KEY, userName);
         }
-        // Message de bienvenue personnalisé
         printOutput(`Greetings ${userName}, welcome to the Grid.`);
         waitingUserName = false;
         promptEl.textContent = `${userName}>`;
         inputEl.placeholder = '';
       } else {
+        if (cmd.toLowerCase() === '/userreset' || cmd.toLowerCase() === 'restart' || cmd.toLowerCase() === 'reset') {
+          localStorage.removeItem(STORAGE_KEY);
+          location.reload();
+          return;
+        }
         processCommand(cmd);
       }
     }
   });
 
-  // Focus input quand on clique sur le terminal
   terminalEl.addEventListener('click', () => {
     inputEl.focus();
   });
