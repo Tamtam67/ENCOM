@@ -3,221 +3,446 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Console TRON Test</title>
+<title>TRON Console Prototype</title>
 <style>
-  body {
-    background: #000;
-    color: #0ff;
-    font-family: "Courier New", Courier, monospace;
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+  html, body {
     margin: 0;
+    padding: 0;
+    background: #000000;
+    color: #00ffff;
+    font-family: 'Share Tech Mono', monospace;
+    overflow: hidden;
+    height: 100%;
+    user-select: none;
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    align-items: center;
   }
-  #console-wrapper {
-    flex: 1;
+
+  #logo-container {
+    text-align: center;
+    margin: 1rem 0;
+  }
+
+  #logo-container img {
+    max-width: 50vw;
+    height: auto;
+  }
+
+  #terminal {
+    width: 90vw;
+    max-width: 900px;
+    height: 65vh;
+    background: #000011;
+    border: 2px solid #00ffff;
+    padding: 1rem;
     overflow-y: auto;
-    padding: 10px;
-    box-sizing: border-box;
-  }
-  #output {
+    box-shadow: 0 0 10px #00ffff;
     white-space: pre-wrap;
-  }
-  .output {
-    margin-bottom: 6px;
-  }
-  #input-line {
     display: flex;
-    border-top: 1px solid #0ff;
-    padding: 8px 10px;
+    flex-direction: column;
+    justify-content: flex-start;
   }
-  #prompt {
-    user-select: none;
-    margin-right: 5px;
+
+  .input-line {
+    display: flex;
+    margin-top: auto;
+    margin-bottom: 0.5rem;
   }
+
+  .prompt {
+    color: #00ffea;
+    margin-right: 0.5rem;
+    white-space: nowrap;
+  }
+
   #cmdline {
     background: transparent;
     border: none;
+    color: #00ffff;
     outline: none;
-    color: #0ff;
-    font-family: "Courier New", Courier, monospace;
+    flex-grow: 1;
+    font-family: 'Share Tech Mono', monospace;
     font-size: 1rem;
-    flex: 1;
+  }
+
+  .output {
+    margin-bottom: 1rem;
+    line-height: 1.3;
+    word-wrap: break-word;
+  }
+
+  @keyframes blink {
+    0%, 50% { opacity: 1; }
+    50.01%, 100% { opacity: 0; }
+  }
+
+  #cursor {
+    display: inline-block;
+    width: 10px;
+    background: #00ffff;
+    margin-left: 2px;
+    animation: blink 1s steps(2, start) infinite;
+  }
+
+  @media (max-width: 600px) {
+    #logo-container img {
+      max-width: 80vw;
+    }
+
+    #terminal {
+      height: 60vh;
+    }
+
+    #cmdline {
+      font-size: 0.9rem;
+    }
   }
 </style>
 </head>
 <body>
-  <div id="console-wrapper">
-    <div id="output"></div>
+  <div id="logo-container">
+    <img src="LOGO/Encom.jpg" alt="Logo ENCOM" />
   </div>
-  <div id="input-line">
-    <div id="prompt"></div>
-    <input id="cmdline" autocomplete="off" autofocus spellcheck="false" />
+
+  <div id="terminal" tabindex="0" aria-label="Console TRON interactive">
+    <div id="output"></div>
+    <div class="input-line">
+      <span class="prompt" id="prompt">USER&gt;</span>
+      <input type="text" id="cmdline" autocomplete="off" autofocus />
+      <span id="cursor"></span>
+    </div>
   </div>
 
 <script>
-(() => {
   const outputEl = document.getElementById('output');
   const inputEl = document.getElementById('cmdline');
+  const terminalEl = document.getElementById('terminal');
   const promptEl = document.getElementById('prompt');
-  const STORAGE_KEY = 'tronUserNameTest';
 
-  let userName = localStorage.getItem(STORAGE_KEY) || null;
-  let waitingUserName = !userName;
+  const STORAGE_KEY = 'tronUserName';
 
-  // États du scénario
-  let stage = 0;  // 0: attente nom ou enterGrid, 1: initializeUser, 2: runSecurityScan, 3: loadDiscWars, 4: choix canonProtocol, 5: fin canon
-  let branchCanonDone = false;
+  let savedName = localStorage.getItem(STORAGE_KEY);
+  let userName = savedName ? savedName : 'USER';
+  let waitingUserName = !savedName;
+
+  const helpMessage = `Commandes disponibles:
+- scan flynn
+- patch clu
+- reboot isos
+- reset (ou restart) : recommencer la session
+Tape ta commande et appuie sur Entrée.`;
 
   function printOutput(text) {
     const div = document.createElement('div');
     div.className = 'output';
     div.textContent = text;
     outputEl.appendChild(div);
-    outputEl.parentElement.scrollTop = outputEl.parentElement.scrollHeight;
+    terminalEl.scrollTop = terminalEl.scrollHeight;
   }
-
-  function updatePrompt() {
-    promptEl.textContent = userName ? `${userName}>` : '';
-  }
-
-  function getAvailableCommands() {
-    if (waitingUserName) return ['enterGrid();', 'reset', 'restart'];
-    switch(stage) {
-      case 0: return ['enterGrid();', 'reset', 'restart'];
-      case 1: return ['initializeUser();', 'reset', 'restart'];
-      case 2: return ['runSecurityScan();', 'reset', 'restart'];
-      case 3: return ['loadDiscWars();', 'reset', 'restart'];
-      case 4:
-        return branchCanonDone
-          ? ['proceedToCLU();', 'reset', 'restart']
-          : ['canonProtocol();', 'reset', 'restart'];
-      case 5: return ['reset', 'restart'];
-      default: return ['reset', 'restart'];
-    }
-  }
-
-  function showHelp() {
-    const cmds = getAvailableCommands().join('\n- ');
-    printOutput(`Commandes disponibles :\n- ${cmds}`);
-  }
-
-  function resetSession() {
-    localStorage.removeItem(STORAGE_KEY);
-    location.reload();
-  }
-
-  function processCommand(cmd) {
-    cmd = cmd.trim();
-    if (cmd === '') return;
-
-    if (cmd === 'reset' || cmd === 'restart') {
-      resetSession();
-      return;
-    }
-
-    if (waitingUserName) {
-      // Enregistrement du nom utilisateur
-      userName = cmd.toUpperCase();
-      localStorage.setItem(STORAGE_KEY, userName);
-      waitingUserName = false;
-      stage = 0;
-      updatePrompt();
-      printOutput(`Bienvenue ${userName}, vous entrez dans la Grille TRON.`);
-      showHelp();
-      return;
-    }
-
-    printOutput(`${userName}> ${cmd}`);
-
-    switch(stage) {
-      case 0:
-        if (cmd === 'enterGrid();') {
-          printOutput('[Connexion établie...]');
-          printOutput('[Localisation] Grille détectée : Univers système_12.8');
-          stage = 1;
-          showHelp();
-        } else {
-          printOutput(`[ERROR] Commande inconnue à cette étape : "${cmd}"`);
-          showHelp();
-        }
-        break;
-      case 1:
-        if (cmd === 'initializeUser();') {
-          printOutput('[Système] Attribution du disque d\'identité...');
-          printOutput('[Résultat] : Disque affecté à : SAM_FLYNN');
-          stage = 2;
-          showHelp();
-        } else {
-          printOutput(`[ERROR] Commande inconnue à cette étape : "${cmd}"`);
-          showHelp();
-        }
-        break;
-      case 2:
-        if (cmd === 'runSecurityScan();') {
-          printOutput('[Système] Scan complet. Statut : ANOMALIE.');
-          printOutput('[ALERTE] Utilisateur non conforme. Reroutage vers l’arène de jeu...');
-          stage = 3;
-          showHelp();
-        } else {
-          printOutput(`[ERROR] Commande inconnue à cette étape : "${cmd}"`);
-          showHelp();
-        }
-        break;
-      case 3:
-        if (cmd === 'loadDiscWars();') {
-          printOutput('[Épreuve] Disc Wars — Adversaire : Classe élite | Identité : RINZLER');
-          printOutput('> Statut de SAM : inexpérimenté');
-          printOutput('> Victoire peu probable');
-          printOutput('Choisissez votre protocole de réaction :');
-          printOutput('1. canonProtocol();     // Suivre le film : Sam est vaincu mais capturé');
-          stage = 4;
-          showHelp();
-        } else {
-          printOutput(`[ERROR] Commande inconnue à cette étape : "${cmd}"`);
-          showHelp();
-        }
-        break;
-      case 4:
-        if (cmd === 'canonProtocol();') {
-          printOutput('[Résultat] : Combat lancé. Rinzler neutralise Sam sans le derezzer.');
-          printOutput('[Conséquence] : Sam est capturé et emmené vers CLU.');
-          branchCanonDone = true;
-          stage = 5;
-          showHelp();
-        } else {
-          printOutput(`[ERROR] Commande inconnue à cette étape : "${cmd}"`);
-          showHelp();
-        }
-        break;
-      case 5:
-        printOutput('Fin de la séquence canon TRON. Tapez reset ou restart pour recommencer.');
-        break;
-      default:
-        printOutput(`[ERROR] État inattendu : "${stage}"`);
-        showHelp();
-        break;
-    }
-  }
-
-  // Initialisation
-  updatePrompt();
 
   if (waitingUserName) {
-    printOutput('Veuillez entrer votre nom d\'utilisateur (ex : SAM_FLYNN) :');
+    promptEl.textContent = '';
+    inputEl.placeholder = 'Entrez votre nom d’utilisateur...';
   } else {
-    printOutput(`Bienvenue ${userName}, tapez "enterGrid();" pour commencer.`);
-    showHelp();
+    promptEl.textContent = `${userName}>`;
+    printOutput(`Greetings ${userName}, welcome back to the Grid.`);
+    printOutput(helpMessage);
+  }
+
+  const responses = {
+    'scan flynn': `[SCAN] Analyse de Sam Flynn en cours...
+Program status: ACTIVE
+No anomalies detected.
+Awaiting further commands.`,
+
+    'patch clu': `[PATCH] Tentative de correction du programme CLU...
+Warning: Integrity check failed.
+Patch aborted. CLU remains a threat.`,
+
+    'reboot isos': `[REBOOT] Redémarrage des programmes ISOs...
+System stable.
+ISOs synchronized with mainframe.`,
+
+    'help': helpMessage,
+    '': ''
+  };
+
+  function processCommand(cmd) {
+    cmd = cmd.trim().toLowerCase();
+    if (responses[cmd] !== undefined) {
+      printOutput(`${userName}> ${cmd}`);
+      printOutput(responses[cmd]);
+    } else {
+      printOutput(`${userName}> ${cmd}`);
+      printOutput(`[ERROR] Commande inconnue: "${cmd}". Tape "help" pour la liste.`);
+    }
   }
 
   inputEl.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
-      const cmd = inputEl.value;
+      e.preventDefault();
+      const cmd = inputEl.value.trim();
       inputEl.value = '';
-      processCommand(cmd);
+
+      if (waitingUserName) {
+        if (cmd.length > 0) {
+          userName = cmd.toUpperCase();
+          localStorage.setItem(STORAGE_KEY, userName);
+        }
+        printOutput(`Greetings ${userName}, welcome to the Grid.`);
+        printOutput(helpMessage);
+        waitingUserName = false;
+        promptEl.textContent = `${userName}>`;
+        inputEl.placeholder = '';
+      } else {
+        if (cmd === 'reset' || cmd === 'restart') {
+          localStorage.removeItem(STORAGE_KEY);
+          location.reload();
+          return;
+        }
+        processCommand(cmd);
+      }
     }
   });
-})();
+
+  terminalEl.addEventListener('click', () => {
+    inputEl.focus();
+  });
+</script>
+
+<audio id="ambient-sound" src="SOUNDS/Ambiant - Yout.mp3" loop autoplay></audio>
+<script>
+  const audio = document.getElementById('ambient-sound');
+  audio.volume = 0.15;
+  function tryPlayAudio() {
+    audio.play().then(() => {
+      audio.muted = false;
+    }).catch(() => {
+      document.body.addEventListener('click', () => {
+        audio.play();
+        audio.muted = false;
+      }, { once: true });
+    });
+  }
+  tryPlayAudio();
+</script>
+  <script>
+  (function() {
+    const outputEl = document.getElementById('output');
+    const inputEl = document.getElementById('cmdline');
+    const terminalEl = document.getElementById('terminal');
+    const promptEl = document.getElementById('prompt');
+
+    const STORAGE_KEY = 'tronUserName';
+
+    // Variables de gestion de l'état narratif
+    let savedName = localStorage.getItem(STORAGE_KEY);
+    let userName = savedName ? savedName : 'USER';
+    let waitingUserName = !savedName;
+    let gameStage = 'start'; // pour gérer la progression
+
+    // Message d'aide dynamique selon l'état
+    function getHelpMessage() {
+      if (waitingUserName) {
+        return 'Entrez votre nom d’utilisateur...';
+      }
+      switch(gameStage) {
+        case 'start':
+          return `Commandes disponibles :
+- enterGrid()
+- initializeUser()
+- reset
+- restart`;
+        case 'afterInitialize':
+          return `Commandes disponibles :
+- runSecurityScan()
+- reset
+- restart`;
+        case 'afterScan':
+          return `Commandes disponibles :
+- loadDiscWars()
+- reset
+- restart`;
+        case 'discWars':
+          return `Commandes disponibles :
+- canonProtocol()
+- derezzOpponent()
+- pacifyCombat()
+- reset
+- restart`;
+        default:
+          return `Commandes disponibles :
+- reset
+- restart`;
+      }
+    }
+
+    // Fonction pour afficher du texte dans la console
+    function printOutput(text) {
+      const div = document.createElement('div');
+      div.className = 'output';
+      div.textContent = text;
+      outputEl.appendChild(div);
+      terminalEl.scrollTop = terminalEl.scrollHeight;
+    }
+
+    // Initialisation de l'affichage selon l'état
+    function initializeConsole() {
+      if(waitingUserName) {
+        promptEl.textContent = '';
+        inputEl.placeholder = 'Entrez votre nom d’utilisateur...';
+      } else {
+        promptEl.textContent = `${userName}>`;
+        printOutput(`Greetings ${userName}, welcome back to the Grid.`);
+        printOutput(getHelpMessage());
+      }
+    }
+
+    // Traitement des commandes selon le scénario
+    function processCommand(cmd) {
+      cmd = cmd.trim().toLowerCase();
+      if(waitingUserName) {
+        if(cmd.length > 0) {
+          userName = cmd.toUpperCase();
+          localStorage.setItem(STORAGE_KEY, userName);
+          waitingUserName = false;
+          promptEl.textContent = `${userName}>`;
+          printOutput(`Greetings ${userName}, welcome to the Grid.`);
+          printOutput(getHelpMessage());
+        }
+        return;
+      }
+
+      switch(gameStage) {
+        case 'start':
+          if(cmd === 'entergrid()') {
+            printOutput(`${userName}> ${cmd}`);
+            printOutput('[Connexion établie...]');
+            printOutput('[Localisation] Grille détectée : Univers système_12.8');
+            printOutput('[Système] Numérisation en cours...');
+            printOutput('[Système] Identité inconnue — utilisateur non enregistré.');
+            printOutput('▶ Action disponible :');
+            printOutput('- initializeUser();  // Générer une identité pour l\'utilisateur');
+            gameStage = 'awaitInitialize';
+            printOutput(getHelpMessage());
+          } else {
+            printOutput(`${userName}> ${cmd}`);
+            printOutput(`[ERROR] Commande inconnue ou hors contexte. Tapez "enterGrid()" pour commencer.`);
+          }
+          break;
+
+        case 'awaitInitialize':
+          if(cmd === 'initializeuser()') {
+            printOutput(`${userName}> ${cmd}`);
+            printOutput('[Système] Attribution du disque d\'identité...');
+            printOutput('[Résultat] : Disque affecté à : SAM_FLYNN');
+            printOutput('▶ Action suivante :');
+            printOutput('- runSecurityScan();  // Sécurité en cours');
+            gameStage = 'afterInitialize';
+            printOutput(getHelpMessage());
+          } else {
+            printOutput(`${userName}> ${cmd}`);
+            printOutput('[ERROR] Commande inconnue. Tapez "initializeUser()" pour continuer.');
+          }
+          break;
+
+        case 'afterInitialize':
+          if(cmd === 'runsecurityscan()') {
+            printOutput(`${userName}> ${cmd}`);
+            printOutput('[Système] Scan complet. Statut : ANOMALIE.');
+            printOutput('[ALERTE] Utilisateur non conforme. Reroutage vers l’arène de jeu...');
+            printOutput('▶ Téléportation en cours vers : Disc Wars');
+            gameStage = 'afterScan';
+            printOutput(getHelpMessage());
+          } else {
+            printOutput(`${userName}> ${cmd}`);
+            printOutput('[ERROR] Commande inconnue. Tapez "runSecurityScan()" pour continuer.');
+          }
+          break;
+
+        case 'afterScan':
+          if(cmd === 'loaddiscwars()') {
+            printOutput(`${userName}> ${cmd}`);
+            printOutput('[Épreuve] Disc Wars — Adversaire : Classe élite | Identité : RINZLER');
+            printOutput('> Statut de SAM : inexpérimenté');
+            printOutput('> Victoire peu probable');
+            printOutput('Choisissez votre protocole de réaction :');
+            printOutput('1. canonProtocol();     // Suivre le film : Sam est vaincu mais capturé');
+            printOutput('2. derezzOpponent();    // Vous tentez de tuer Rinzler');
+            printOutput('3. pacifyCombat();      // Vous tentez une sortie pacifique');
+            gameStage = 'discWars';
+            printOutput(getHelpMessage());
+          } else {
+            printOutput(`${userName}> ${cmd}`);
+            printOutput('[ERROR] Commande inconnue. Tapez "loadDiscWars()" pour continuer.');
+          }
+          break;
+
+        case 'discWars':
+          if(cmd === 'canonprotocol()') {
+            printOutput(`${userName}> ${cmd}`);
+            printOutput('[Résultat] : Combat lancé. Rinzler neutralise Sam sans le derezzer.');
+            printOutput('[Conséquence] : Sam est capturé et emmené vers CLU.');
+            printOutput('▶ Chargement du processus de rencontre avec CLU...');
+            printOutput('Commandes disponibles : - proceedToCLU() - reset - restart');
+            // On peut ajouter la suite plus tard
+          }
+          else if(cmd === 'derezzopponent()') {
+            printOutput(`${userName}> ${cmd}`);
+            printOutput('[ALERTE] Vous tentez une attaque létale sur Rinzler...');
+            printOutput('[Échec critique] : Le disque est dévié. Sam est désarmé.');
+            printOutput('[Conséquence] : Rinzler riposte brutalement. Sam est gravement blessé.');
+            printOutput('▶ FIN ALTERNATIVE : Sam est derezzé prématurément.');
+            printOutput('Commandes disponibles : - restart');
+          }
+          else if(cmd === 'pacifycombat()') {
+            printOutput(`${userName}> ${cmd}`);
+            printOutput('[Action] : Tentative de dialogue pacifique... rejetée par Rinzler.');
+            printOutput('[Système] : Les règles du jeu n’autorisent pas la reddition.');
+            printOutput('[Conséquence] : Sam est capturé sans violence.');
+            printOutput('▶ Chargement de la scène suivante...');
+            printOutput('Commandes disponibles : - proceedToCLU() - reset - restart');
+          }
+          else {
+            printOutput(`${userName}> ${cmd}`);
+            printOutput('[ERROR] Commande inconnue. Choisissez canonProtocol(), derezzOpponent() ou pacifyCombat().');
+          }
+          break;
+
+        default:
+          printOutput(`${userName}> ${cmd}`);
+          printOutput('[ERROR] Commande inconnue ou hors contexte.');
+          break;
+      }
+    }
+
+    // Gestion de l'entrée utilisateur
+    inputEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const cmd = inputEl.value.trim();
+        inputEl.value = '';
+
+        if (cmd === 'reset' || cmd === 'restart') {
+          localStorage.removeItem(STORAGE_KEY);
+          location.reload();
+          return;
+        }
+
+        processCommand(cmd);
+      }
+    });
+
+    terminalEl.addEventListener('click', () => {
+      inputEl.focus();
+    });
+
+    // Initialisation au chargement
+    initializeConsole();
+  })();
 </script>
 </body>
 </html>
