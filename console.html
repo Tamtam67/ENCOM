@@ -297,6 +297,18 @@
       }
     }
 
+    // === AJOUT POUR L'AUDIO ===
+
+    // Charger le son TRON (remplace par le chemin réel de ton fichier)
+    const audio = new Audio('SOUNDS/Ambiant - Yout.mp3');
+audio.loop = true;  // <--- ici on active la boucle
+audio.volume = 0.15;
+audio.play().catch(e => {
+  console.warn('Impossible de jouer le son automatiquement:', e);
+});
+
+    // === FIN AUDIO ===
+
     function init() {
       if (waitingUserName) {
         printOutput('Bienvenue dans la Grille TRON. Veuillez saisir votre nom d’utilisateur :');
@@ -306,6 +318,12 @@
         printOutput(`Bienvenue ${userName} ! Tapez "help" pour la liste des commandes.`);
       }
       inputEl.focus();
+
+      // === AUTO LECTURE DU SON SI L'UTILISATEUR A INTERAGI SUR INDEX.HTML ===
+      const userHasInteracted = localStorage.getItem('userHasInteracted');
+      if (userHasInteracted === 'true') {
+        playSound();
+      }
     }
 
     inputEl.addEventListener('keydown', (e) => {
