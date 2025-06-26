@@ -147,8 +147,7 @@
   restart: 'restart',
   dodge: 'dodge()',
   counter: 'counter()',
-  yield: 'yield()',
-  surrender: 'surrender()',
+  yield: 'yield()'
 };
 
 const commandsByStage = {
@@ -157,8 +156,16 @@ const commandsByStage = {
   postCapture: [allCommands.assignGames],
   assignGames: [allCommands.getDisc],
   discWars: [allCommands.fight, allCommands.scan],
-  rinzlerCombat: [allCommands.dodge, allCommands.counter, allCommands.yield, allCommands.surrender],
-  cluEncounter: [allCommands.talkCLU, allCommands.resistCLU, allCommands.scanCLU, allCommands.scanSam, allCommands.help, allCommands.reset, allCommands.restart]
+  rinzlerCombat: [allCommands.dodge, allCommands.counter, allCommands.yield],
+  cluEncounter: [
+    allCommands.talkCLU,
+    allCommands.resistCLU,
+    allCommands.scanCLU,
+    allCommands.scanSam,
+    allCommands.help,
+    allCommands.reset,
+    allCommands.restart
+  ]
 };
       function printOutput(text) {
         const div = document.createElement('div');
@@ -284,7 +291,6 @@ const commandsByStage = {
                 'Sirène : "Duplication terminée. Disque et activé et synchronisé. Procédez à la mise en jeu."',
                 '[INFO] Survivre.',
                 '▶ Transition vers : Arène Disc Wars...'
-                '▶ Commande suivante : ${allCommands.scan}'
               ]);
               gameStage = 'discWars';
             }
@@ -297,7 +303,6 @@ const commandsByStage = {
       '[STATUT] Garde Noir',
       '[ORIGINE] E̶̱̜̕N̷̲̈C̶̨̊͊_̸̫̖͠0̷̗͉̿M̶͕̀͑ ̴̹͗Š̶͎͆Y̴̯̖͐̓_̷̺͛S̵̢̳̄T̶͎͈͒3̴̤͝_̵̺̘̽̓M̴̼̮̑',
       '[AVERTISSEMENT] Niveau de menace maximal'
-      '▶ Commande suivante : ${allCommands.fight}'
     ]);
   }
 
@@ -312,7 +317,7 @@ const commandsByStage = {
       '[AVERTISSEMENT] CONCEPTEUR',
       '[RINZLER] Blocage du mouvement.',
       'RINZLER : "Concepteur..."',
-      '▶ Commandes possibles : dodge(), counter(), yield(), surrender()'
+      '▶ Commandes possibles : dodge(), counter(), yield()'
     ]);
     gameStage = 'rinzlerCombat';
   }
@@ -327,16 +332,6 @@ case 'rinzlerCombat':
       '[RINZLER] Interruption du protocole de frappe.',
       '[RECONNAISSANCE] Signature identifiée : CONCEPTEUR',
       '[RINZLER] Blocage du mouvement.',
-      'RINZLER : "Concepteur..."',
-    ]);
-    gameStage = 'cluEncounter';
-  } else if (['surrender()'].includes(cmd.toLowerCase())) {
-    delayedOutput([
-      `[INPUT] ${cmd}`,
-      '[ACTION BLOQUÉE] Analyse comportementale...',
-      '[ANALYSE EN COURS]... Anomalie détectée.',
-      '[AVERTISSEMENT] CONCEPTEUR',
-      '[RINZLER] Immobilisation au sol de SAM.',
       'RINZLER : "Concepteur..."',
     ]);
     gameStage = 'cluEncounter';
