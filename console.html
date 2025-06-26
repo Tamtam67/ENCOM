@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
@@ -147,7 +147,9 @@
   restart: 'restart',
   dodge: 'dodge()',
   counter: 'counter()',
-  yield: 'yield()'
+  yield: 'yield()',
+  getUP: 'getUP()',
+  idUser: 'idUser()'
 };
 
 const commandsByStage = {
@@ -157,6 +159,7 @@ const commandsByStage = {
   assignGames: [allCommands.getDisc],
   discWars: [allCommands.fight, allCommands.scan],
   rinzlerCombat: [allCommands.dodge, allCommands.counter, allCommands.yield],
+  idProgram: [allCommands.getUP, allCommands.idUser],
   cluEncounter: [
     allCommands.talkCLU,
     allCommands.resistCLU,
@@ -244,8 +247,8 @@ const commandsByStage = {
                 '[ENV] Atterrissage sur plateforme luminescente',
                 '[SCAN] Analyse verticale en cours...',
                 '[ALERTE] Deux gardes détectés',
-                'Garde : "Ce programme n\'a pas de disque. Encore un vagabond.',
-                '▶ Résister ou se laisser faire ?'
+                'Garde : "Ce programme n\'a pas de disque. Encore un vagabond."',
+                '▶ Résister ou se laisser faire ? resistCapture() ou acceptCapture()'
               ]);
               gameStage = 'gridArrival';
             }
@@ -254,7 +257,7 @@ const commandsByStage = {
           case 'gridArrival':
             if (equalsCommand(cmd, allCommands.resistCapture) || equalsCommand(cmd, allCommands.acceptCapture)) {
               const actionMsg = equalsCommand(cmd, allCommands.resistCapture)
-                ? '[ACTION] Résistance engagée\n[RESULTAT] Choc électrique reçu. Paralysie temporaire.'
+                ? '[ACTION] Résistance engagée\n[RESULTAT] Deux Gardes Noirs forcent à avancer.'
                 : '[ACTION] Capture acceptée. Immobilisation immédiate.';
 
               delayedOutput([
@@ -262,6 +265,7 @@ const commandsByStage = {
                 '[ENV] Transport en reconnaisseur',
                 '[SCAN] En cours d\'attribution aux tâches',
                 'Garde : "Jeux."'
+                '▶ Saisir assignGames() pour continuer.'
               ]);
               gameStage = 'postCapture';
             }
@@ -274,7 +278,7 @@ const commandsByStage = {
                 '[SYSTEME] Préparation du sujet pour les jeux...',
                 '[ACTION] Vêtements retirés, combinaison lumineuse appliquée',
                 '[REQUETE] Disque d\'identité requis',
-                `▶ Commande suivante : ${allCommands.getDisc}`
+                `▶ Laissez les Sirènes vous attribuer vôtre disque d\'identité : ${allCommands.getDisc}`
               ]);
               gameStage = 'assignGames';
             }
@@ -291,6 +295,7 @@ const commandsByStage = {
                 'Sirène : "Duplication terminée. Disque et activé et synchronisé. Procédez à la mise en jeu."',
                 '[INFO] Survivre.',
                 '▶ Transition vers : Arène Disc Wars...'
+                '▶ Saisir : scanEnemy()'
               ]);
               gameStage = 'discWars';
             }
@@ -303,6 +308,7 @@ const commandsByStage = {
               '[STATUT] Garde Noir',
               '[ORIGINE] E̶̱̜̕N̷̲̈C̶̨̊͊_̸̫̖͠0̷̗͉̿M̶͕̀͑ ̴̹͗Š̶͎͆Y̴̯̖͐̓_̷̺͛S̵̢̳̄T̶͎͈͒3̴̤͝_̵̺̘̽̓M̴̼̮̑',
               '[AVERTISSEMENT] Niveau de menace maximal'
+              '▶ Saisir fightRinzler() pour continuer.'
             ]);
           }
 
@@ -313,10 +319,8 @@ const commandsByStage = {
               '[ACTION] Lancer du disque échoué. RINZLER esquive.',
               '[REPONSE] RINZLER riposte avec précision...',
               '[TOUCHÉ] Impact au bras. Intégrité corporelle 99.9%.',
-              '[ANALYSE EN COURS]... Anomalie détectée.',
-              '[AVERTISSEMENT] CONCEPTEUR',
-              '[RINZLER] Blocage du mouvement.',
-              'RINZLER : "Concepteur..."',
+              '[ACTION] Vous vous engagez dans un combat dont l\'issue semble être perdue d\'avance car vôtre ennemi est agile.',
+              '[ACTION] RINZLER vous saute dessus.'
               '▶ Commandes possibles : dodge(), counter(), yield()'
             ]);
             gameStage = 'rinzlerCombat';
@@ -327,18 +331,37 @@ case 'rinzlerCombat':
   if (['dodge()', 'counter()', 'yield()'].includes(cmd.toLowerCase())) {
     delayedOutput([
       `[INPUT] ${cmd}`,
-      '[ACTION BLOQUÉE] Analyse comportementale...',
-      '[INFO] Libre arbitre simulé.',
-      '[RINZLER] Interruption du protocole de frappe.',
-      '[RECONNAISSANCE] Signature identifiée : CONCEPTEUR',
+      '[ACTION] RINZLER met son disque sous vôtre gorge.',
+      '[ANALYSE EN COURS]... Anomalie détectée.',
+      '[AVERTISSEMENT] CONCEPTEUR',
       '[RINZLER] Blocage du mouvement.',
       'RINZLER : "Concepteur..."',
+      '[ACTION] RINZLER se lève et vous force à vous lever aussi.',
+      '▶ Saisir getUp() pour continuer.'
     ]);
-    gameStage = 'cluEncounter';
+    gameStage = 'idProgram';
   } else {
     printOutput('[ERREUR] Choix invalide. Essayez : dodge(), counter(), yield()');
   }
   break;
+            
+                  case 'idProgram':
+            if (equalsCommand(cmd, allCommands.getUp()) {
+              delayedOutput([
+                '[ACTION] RINZLER se lève et vous force à vous lever aussi.',
+                'JARVIS : "Veuillez vous identifier, Programme',
+                '▶ Saisir idUser() pour vous identifier auprès de Jarvis'
+              ]);
+            } else if (equalsCommand(cmd, allCommands.idUser)) {
+            delayedOutput([
+              'VOUS : "Je m\'appelles Sam Flynn"',
+              '▶ Saisir talkCLU() pour continuer.'
+            ]);
+
+              
+              gameStage = 'cluEncounter';
+            }
+            break;
 
         case 'cluEncounter':
           if (equalsCommand(cmd, allCommands.talkCLU)) {
