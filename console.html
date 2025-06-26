@@ -159,6 +159,14 @@
         terminalEl.scrollTop = terminalEl.scrollHeight;
       }
 
+      function delayedOutput(lines, baseDelay = 600) {
+        lines.forEach((line, index) => {
+          setTimeout(() => {
+            printOutput(line);
+          }, baseDelay * index);
+        });
+      }
+
       function getPrompt() {
         return waitingUserName ? '' : `${userName}>`;
       }
@@ -182,9 +190,11 @@
             localStorage.setItem(STORAGE_KEY, userName);
             waitingUserName = false;
             promptEl.textContent = getPrompt();
-            printOutput(`Identité reçue. Bienvenue ${userName}.`);
-            printOutput(`Initialisation du système en cours...`);
-            printOutput(getHelpMessage());
+            delayedOutput([
+              `Identité reçue. Bienvenue ${userName}.`,
+              `Initialisation du système en cours...`,
+              getHelpMessage()
+            ]);
           }
           return;
         }
@@ -212,70 +222,87 @@
         switch (gameStage) {
           case 'start':
             if (equalsCommand(cmd, allCommands.enterGrid)) {
-              printOutput('[CONNEXION] Entrée dans la grille...');
-              printOutput('[SYSTEME] Transfert numérique en cours...');
-              printOutput('[ENV] Atterrissage sur plateforme luminescente');
-              printOutput('[SCAN] Analyse verticale en cours...');
-              printOutput('[ALERTE] Deux gardes détectés');
-              printOutput('Garde : "Ce programme n\'a pas de disque. Encore un vagabond.');
-              printOutput('▶ Résister ou se laisser faire ?');
+              delayedOutput([
+                '[CONNEXION] Entrée dans la grille...',
+                '[SYSTEME] Transfert numérique en cours...',
+                '[ENV] Atterrissage sur plateforme luminescente',
+                '[SCAN] Analyse verticale en cours...',
+                '[ALERTE] Deux gardes détectés',
+                'Garde : "Ce programme n\'a pas de disque. Encore un vagabond.',
+                '▶ Résister ou se laisser faire ?'
+              ]);
               gameStage = 'gridArrival';
             }
             break;
 
           case 'gridArrival':
             if (equalsCommand(cmd, allCommands.resistCapture) || equalsCommand(cmd, allCommands.acceptCapture)) {
-              printOutput(equalsCommand(cmd, allCommands.resistCapture)
+              const actionMsg = equalsCommand(cmd, allCommands.resistCapture)
                 ? '[ACTION] Résistance engagée\n[RESULTAT] Choc électrique reçu. Paralysie temporaire.'
-                : '[ACTION] Capture acceptée. Immobilisation immédiate.');
-              printOutput('[SCAN] JEUX');
-              printOutput('Garde : "Jeux."');
+                : '[ACTION] Capture acceptée. Immobilisation immédiate.';
+
+              delayedOutput([
+                actionMsg,
+                '[ENV] Transport en reconnaisseur',
+                '[SCAN] En cours d\'attribution aux tâches',
+                'Garde : "Jeux."'
+              ]);
               gameStage = 'postCapture';
             }
             break;
 
           case 'postCapture':
             if (equalsCommand(cmd, allCommands.assignGames)) {
-              printOutput('[LIEU] Salle d’attribution');
-              printOutput('[SYSTEME] Préparation du sujet pour les jeux...');
-              printOutput('[ACTION] Vêtements retirés, combinaison lumineuse appliquée');
-              printOutput('[REQUETE] Disque d\'identité requis');
-              printOutput(`▶ Commande suivante : ${allCommands.getDisc}`);
+              delayedOutput([
+                '[LIEU] Salle d’habillage',
+                '[SYSTEME] Préparation du sujet pour les jeux...',
+                '[ACTION] Vêtements retirés, combinaison lumineuse appliquée',
+                '[REQUETE] Disque d\'identité requis',
+                `▶ Commande suivante : ${allCommands.getDisc}`
+              ]);
               gameStage = 'assignGames';
             }
             break;
 
           case 'assignGames':
             if (equalsCommand(cmd, allCommands.getDisc)) {
-              printOutput('[INFO] Attention programme. Vous allez recevoir un disque d\'identité. Tout ce que vous ferez ou apprendrez sera enregistré sur ce disque. Si vous perdez vôtre disque ou refusez d\'executer les ordres, vous ferez l\'objet d\'une dissolution immédiate.');
-              printOutput('[SYSTEME] Disque d\'identité activé');
-              printOutput('[UTILISATEUR] Lien établi : UNKNOWN');
-              printOutput('[STATUT] Inconnu.');
-              printOutput('[ORIGINE] Inconnu.');
-              printOutput('▶ Transition vers : Arène Disc Wars...');
+              delayedOutput([
+                '[INFO] Attention programme. Vous allez recevoir un disque d\'identité. Tout ce que vous ferez ou apprendrez sera enregistré sur ce disque. Si vous perdez vôtre disque ou refusez d\'executer les ordres, vous ferez l\'objet d\'une dissolution immédiate.',
+                '[SYSTEME] Disque actif et synchronisé',
+                '[UTILISATEUR] Lien établi : UNKNOWN',
+                '[STATUT] Inconnu.',
+                '[ORIGINE] Inconnu.',
+                'Sirène : "Duplication terminée. Disque et activé et synchronisé. Procédez à la mise en jeu."',
+                '[INFO] Survivre.',
+                '▶ Transition vers : Arène Disc Wars...'
+              ]);
               gameStage = 'discWars';
             }
             break;
 
           case 'discWars':
             if (equalsCommand(cmd, allCommands.scan)) {
-              printOutput('[SCAN ENNEMI] Cible : RINZLER');
-              printOutput('[STATUT] Garde Noir');
-              printOutput('[ORIGINE] E̶̱̜̕N̷̲̈C̶̨̊͊_̸̫̖͠0̷̗͉̿M̶͕̀͑ ̴̹͗Š̶͎͆Y̴̯̖͐̓_̷̺͛S̵̢̳̄T̶͎͈͒3̴̤͝_̵̺̘̽̓M̴̼̮̑');
-              printOutput('[AVERTISSEMENT] Niveau de menace maximal');
+              delayedOutput([
+                '[SCAN ENNEMI] Cible : RINZLER',
+                '[STATUT] Garde Noir',
+                '[ORIGINE] E̶̱̜̕N̷̲̈C̶̨̊͊_̸̫̖͠0̷̗͉̿M̶͕̀͑ ̴̹͗Š̶͎͆Y̴̯̖͐̓_̷̺͛S̵̢̳̄T̶͎͈͒3̴̤͝_̵̺̘̽̓M̴̼̮̑',
+                '[AVERTISSEMENT] Niveau de menace maximal'
+              ]);
             }
 
             if (equalsCommand(cmd, allCommands.fight)) {
-              printOutput('[COMBAT] Début de Disc Wars...');
-              printOutput('[ENEMY] RINZLER entre dans l’arène.');
-              printOutput('[ACTION] Lancer du disque échoué. RINZLER esquive.');
-              printOutput('[REPONSE] RINZLER riposte avec précision...');
-              printOutput('[TOUCHÉ] Impact au bras. Intégrité corporelle 99.9%.');
-              printOutput('[ANALYSE EN COURS]... Anomalie détectée.');
-              printOutput('[AVERTISSEMENT] CONCEPTEUR');
-              printOutput('[RINZLER] Blocage du mouvement.');
-              printOutput('RINZLER : "Concepteur..."');
-              printOutput('▶ Aucun choix : le combat continue...');
+              delayedOutput([
+                '[COMBAT] Début de Disc Wars...',
+                '[ENEMY] RINZLER entre dans l’arène.',
+                '[ACTION] Lancer du disque échoué. RINZLER esquive.',
+                '[REPONSE] RINZLER riposte avec précision...',
+                '[TOUCHÉ] Impact au bras. Intégrité corporelle 99.9%.',
+                '[ANALYSE EN COURS]... Anomalie détectée.',
+                '[AVERTISSEMENT] CONCEPTEUR',
+                '[RINZLER] Blocage du mouvement.',
+                'RINZLER : "Concepteur..."',
+                '▶ Aucun choix : le combat continue...'
+              ]);
             }
             break;
         }
