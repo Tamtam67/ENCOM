@@ -160,6 +160,11 @@
     return waitingUserName ? '' : `${userName}>`;
   }
 
+  function showAvailableCommands(cmds) {
+    printOutput('▶ Commandes disponibles :');
+    cmds.forEach(c => printOutput(`- ${c}`));
+  }
+
   function getHelpMessage() {
     if (waitingUserName) return 'Entrez votre nom d’utilisateur...';
     const cmds = commandsByStage[gameStage] || [];
@@ -207,58 +212,59 @@
 
     printOutput(`${userName}> ${rawCmd}`);
 
-switch (gameStage) {
-  case 'start':
-    if (equalsCommand(cmd, allCommands.enterGrid)) {
-      printOutput('[CONNEXION] Entrée dans la grille...');
-      printOutput('[SYSTEME] Transfert numérique en cours...');
-      printOutput('[ENV] Atterrissage sur plateforme luminescente');
-      printOutput('[SCAN] Analyse verticale en cours...');
-      printOutput('[ALERTE] Deux gardes détectés');
-      printOutput('Garde : "Vagabond détecté. Capture."');
-      printOutput('▶ Résister ou se laisser faire ?');
-      gameStage = 'gridArrival';
-    }
-    break;
+    switch (gameStage) {
+      case 'start':
+        if (equalsCommand(cmd, allCommands.enterGrid)) {
+          printOutput('[CONNEXION] Entrée dans la grille...');
+          printOutput('[SYSTEME] Transfert numérique en cours...');
+          printOutput('[ENV] Atterrissage sur plateforme luminescente');
+          printOutput('[SCAN] Analyse verticale en cours...');
+          printOutput('[ALERTE] Deux gardes détectés');
+          printOutput('Garde : "Vagabond détecté. Capture."');
+          showAvailableCommands([allCommands.resistCapture, allCommands.acceptCapture]);
+          gameStage = 'gridArrival';
+        }
+        break;
 
-  case 'gridArrival':
-    if (equalsCommand(cmd, allCommands.resistCapture)) {
-      printOutput('[ACTION] Résistance engagée');
-      printOutput('[RESULTAT] Choc électrique reçu. Paralysie temporaire.');
-      printOutput('Sam : "Aaah ! Qu’est-ce que...?"');
-      printOutput('Garde : "Transfert aux jeux."');
-      gameStage = 'postCapture';
-    }
-    if (equalsCommand(cmd, allCommands.acceptCapture)) {
-      printOutput('[ACTION] Capture acceptée. Immobilisation immédiate.');
-      printOutput('Sam : "Hé... où est-ce que vous m’emmenez ?"');
-      printOutput('Garde : "Transfert aux jeux."');
-      gameStage = 'postCapture';
-    }
-    break;
+      case 'gridArrival':
+        if (equalsCommand(cmd, allCommands.resistCapture)) {
+          printOutput('[ACTION] Résistance engagée');
+          printOutput('[RESULTAT] Choc électrique reçu. Paralysie temporaire.');
+          printOutput('Sam : "Aaah ! Qu’est-ce que...?"');
+          printOutput('Garde : "Transfert aux jeux."');
+          printOutput(`▶ Tapez ${allCommands.assignGames} pour continuer`);
+          gameStage = 'postCapture';
+        } else if (equalsCommand(cmd, allCommands.acceptCapture)) {
+          printOutput('[ACTION] Capture acceptée. Immobilisation immédiate.');
+          printOutput('Sam : "Hé... où est-ce que vous m’emmenez ?"');
+          printOutput('Garde : "Transfert aux jeux."');
+          printOutput(`▶ Tapez ${allCommands.assignGames} pour continuer`);
+          gameStage = 'postCapture';
+        }
+        break;
 
-  case 'postCapture':
-    if (equalsCommand(cmd, allCommands.assignGames)) {
-      printOutput('[LIEU] Salle d’attribution');
-      printOutput('[SYSTEME] Préparation du sujet pour les jeux...');
-      printOutput('[ACTION] Vêtements retirés, combinaison lumineuse appliquée');
-      printOutput('[REQUETE] Disque d\'identité requis');
-      printOutput(`▶ Commande suivante : ${allCommands.getDisc}`);
-      gameStage = 'assignGames';
-    }
-    break;
+      case 'postCapture':
+        if (equalsCommand(cmd, allCommands.assignGames)) {
+          printOutput('[LIEU] Salle d’attribution');
+          printOutput('[SYSTEME] Préparation du sujet pour les jeux...');
+          printOutput('[ACTION] Vêtements retirés, combinaison lumineuse appliquée');
+          printOutput('[REQUETE] Disque d\'identité requis');
+          showAvailableCommands([allCommands.getDisc]);
+          gameStage = 'assignGames';
+        }
+        break;
 
-  case 'assignGames':
-    if (equalsCommand(cmd, allCommands.getDisc)) {
-      printOutput('[SYSTEME] Disque d\'identité activé');
-      printOutput('[UTILISATEUR] Lien établi : SAM_FLYNN');
-      printOutput('[STATUT] Inconnu. Menace potentielle.');
-      printOutput('[INFO] Ce disque contient code source, mémoire, actions.');
-      printOutput('▶ Transition vers : Arène Disc Wars...');
-      // prochaine scène ici (à enchaîner dans update future)
+      case 'assignGames':
+        if (equalsCommand(cmd, allCommands.getDisc)) {
+          printOutput('[SYSTEME] Disque d\'identité activé');
+          printOutput('[UTILISATEUR] Lien établi : SAM_FLYNN');
+          printOutput('[STATUT] Inconnu. Menace potentielle.');
+          printOutput('[INFO] Ce disque contient code source, mémoire, actions.');
+          printOutput('▶ Transition vers : Arène Disc Wars...');
+          // prochaine scène ici (à enchaîner dans update future)
+        }
+        break;
     }
-    break;
-}
   }
 
   function init() {
@@ -287,6 +293,7 @@ switch (gameStage) {
   init();
 })();
 </script>
+
 <audio id="ambient-sound" src="SOUNDS/Ambiant - Yout.mp3" loop autoplay></audio>
 <script>
   const audio = document.getElementById('ambient-sound');
