@@ -264,7 +264,7 @@ const commandsByStage = {
                 actionMsg,
                 '[ENV] Transport en reconnaisseur',
                 '[SCAN] En cours d\'attribution aux tâches',
-                'Garde : "Jeux."'
+                'Garde : "Jeux."',
                 '▶ Saisir assignGames() pour continuer.'
               ]);
               gameStage = 'postCapture';
@@ -294,7 +294,7 @@ const commandsByStage = {
                 '[ORIGINE] Inconnu.',
                 'Sirène : "Duplication terminée. Disque et activé et synchronisé. Procédez à la mise en jeu."',
                 '[INFO] Survivre.',
-                '▶ Transition vers : Arène Disc Wars...'
+                '▶ Transition vers : Arène Disc Wars...',
                 '▶ Saisir : scanEnemy()'
               ]);
               gameStage = 'discWars';
@@ -320,7 +320,7 @@ const commandsByStage = {
               '[REPONSE] RINZLER riposte avec précision...',
               '[TOUCHÉ] Impact au bras. Intégrité corporelle 99.9%.',
               '[ACTION] Vous vous engagez dans un combat dont l\'issue semble être perdue d\'avance car vôtre ennemi est agile.',
-              '[ACTION] RINZLER vous saute dessus.'
+              '[ACTION] RINZLER vous saute dessus.',
               '▶ Commandes possibles : dodge(), counter(), yield()'
             ]);
             gameStage = 'rinzlerCombat';
@@ -346,7 +346,7 @@ case 'rinzlerCombat':
   break;
             
                   case 'idProgram':
-            if (equalsCommand(cmd, allCommands.getUp()) {
+            if (equalsCommand(cmd, allCommands.getUP)) {
               delayedOutput([
                 '[ACTION] RINZLER se lève et vous force à vous lever aussi.',
                 'JARVIS : "Veuillez vous identifier, Programme',
