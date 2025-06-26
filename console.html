@@ -117,281 +117,238 @@
   </div>
 
 <script>
-  (function() {
-    const outputEl = document.getElementById('output');
-    const inputEl = document.getElementById('cmdline');
-    const terminalEl = document.getElementById('terminal');
-    const promptEl = document.getElementById('prompt');
+(function() {
+  const outputEl = document.getElementById('output');
+  const inputEl = document.getElementById('cmdline');
+  const terminalEl = document.getElementById('terminal');
+  const promptEl = document.getElementById('prompt');
 
-    const STORAGE_KEY = 'tronUserName';
+  const STORAGE_KEY = 'tronUserName';
 
-    let savedName = localStorage.getItem(STORAGE_KEY);
-    let userName = savedName ? savedName : 'USER';
-    let waitingUserName = !savedName;
+  let savedName = localStorage.getItem(STORAGE_KEY);
+  let userName = savedName || 'USER';
+  let waitingUserName = !savedName;
+  let gameStage = 'start';
 
-    // Étapes de progression dans l’histoire
-    let gameStage = 'start';
+  const allCommands = {
+    enterGrid: 'enterGrid()',
+    initializeUser: 'initializeUser()',
+    runSecurityScan: 'runSecurityScan()',
+    loadDiscWars: 'loadDiscWars()',
+    canonProtocol: 'canonProtocol()',
+    derezzOpponent: 'derezzOpponent()',
+    pacifyCombat: 'pacifyCombat()',
+    proceedToCLU: 'proceedToCLU()',
+    trustCLU: 'trustCLU()',
+    confrontCLU: 'confrontCLU()',
+    forceExit: 'forceExit()',
+    launchLightCycleArena: 'launchLightCycleArena()',
+    reset: 'reset',
+    restart: 'restart',
+    help: 'help'
+  };
 
-    // Liste des commandes, casse canonique (exacte)
-    const allCommands = {
-      enterGrid: 'enterGrid()',
-      initializeUser: 'initializeUser()',
-      runSecurityScan: 'runSecurityScan()',
-      loadDiscWars: 'loadDiscWars()',
-      canonProtocol: 'canonProtocol()',
-      derezzOpponent: 'derezzOpponent()',
-      pacifyCombat: 'pacifyCombat()',
-      proceedToCLU: 'proceedToCLU()',
-      launchLightCycleArena: 'launchLightCycleArena()',
-      reset: 'reset',
-      restart: 'restart',
-      help: 'help'
-    };
+  const commandsByStage = {
+    start: [allCommands.enterGrid],
+    awaitInitialize: [allCommands.initializeUser],
+    afterInitialize: [allCommands.runSecurityScan],
+    afterScan: [allCommands.loadDiscWars],
+    discWars: [allCommands.canonProtocol, allCommands.derezzOpponent, allCommands.pacifyCombat],
+    final: [allCommands.proceedToCLU],
+    meetingCLU: [allCommands.trustCLU, allCommands.confrontCLU, allCommands.forceExit],
+    preLightCycle: [allCommands.launchLightCycleArena]
+  };
 
-    // Commandes valides selon étape
-    const commandsByStage = {
-      start: [allCommands.enterGrid],
-      awaitInitialize: [allCommands.initializeUser],
-      afterInitialize: [allCommands.runSecurityScan],
-      afterScan: [allCommands.loadDiscWars],
-      discWars: [allCommands.canonProtocol, allCommands.derezzOpponent, allCommands.pacifyCombat],
-      final: [allCommands.proceedToCLU],
-      commandsByStage.preLightCycle = ['launchLightCycleArena();'];
-      commandsByStage.meetingCLU = ['trustCLU();', 'confrontCLU();', 'forceExit();'];
-    };
+  function printOutput(text) {
+    const div = document.createElement('div');
+    div.className = 'output';
+    div.textContent = text;
+    outputEl.appendChild(div);
+    terminalEl.scrollTop = terminalEl.scrollHeight;
+  }
 
-    function printOutput(text) {
-      const div = document.createElement('div');
-      div.className = 'output';
-      div.textContent = text;
-      outputEl.appendChild(div);
-      terminalEl.scrollTop = terminalEl.scrollHeight;
-    }
+  function getPrompt() {
+    return waitingUserName ? '' : `${userName}>`;
+  }
 
-    function getPrompt() {
-      return waitingUserName ? '' : `${userName}>`;
-    }
+  function getHelpMessage() {
+    if (waitingUserName) return 'Entrez votre nom d’utilisateur...';
+    const cmds = commandsByStage[gameStage] || [];
+    return `Commandes disponibles :\n${cmds.map(c => `- ${c}`).join('\n')}\n- help\n- reset\n- restart`;
+  }
 
-    function getHelpMessage() {
-      if (waitingUserName) {
-        return 'Entrez votre nom d’utilisateur...';
-      }
-      const cmds = commandsByStage[gameStage] || [];
-      let cmdsList = cmds.map(c => `- ${c}`).join('\n');
-      cmdsList += '\n- help\n- reset\n- restart';
-      return `Commandes disponibles :\n${cmdsList}`;
-    }
+  function equalsCommand(inputCmd, validCmd) {
+    return inputCmd.toLowerCase() === validCmd.toLowerCase();
+  }
 
-    function equalsCommand(inputCmd, validCmd) {
-      return inputCmd.toLowerCase() === validCmd.toLowerCase();
-    }
+  function processCommand(rawCmd) {
+    const cmd = rawCmd.trim();
 
-    function processCommand(rawCmd) {
-      const cmd = rawCmd.trim();
-
-      if (waitingUserName) {
-        if (cmd.length > 0) {
-          userName = cmd.toUpperCase();
-          localStorage.setItem(STORAGE_KEY, userName);
-          waitingUserName = false;
-          promptEl.textContent = getPrompt();
-          printOutput(`Greetings ${userName}, bienvenue dans la Grille.`);
-          printOutput(getHelpMessage());
-        }
-        return;
-      }
-
-      if (cmd.toLowerCase() === allCommands.reset || cmd.toLowerCase() === allCommands.restart) {
-        localStorage.removeItem(STORAGE_KEY);
-        location.reload();
-        return;
-      }
-
-      if (cmd.toLowerCase() === allCommands.help) {
-        printOutput(getHelpMessage());
-        return;
-      }
-
-      const validCmds = (commandsByStage[gameStage] || []).map(c => c.toLowerCase()).concat(['help', 'reset', 'restart']);
-
-      if (!validCmds.includes(cmd.toLowerCase())) {
-        printOutput(`${userName}> ${rawCmd}`);
-        printOutput('[ERROR] Commande inconnue ou hors contexte. Tapez "help" pour la liste des commandes valides.');
-        return;
-      }
-
-      printOutput(`${userName}> ${rawCmd}`);
-
-      switch (gameStage) {
-        case 'start':
-          if (equalsCommand(cmd, allCommands.enterGrid)) {
-            printOutput('[Connexion établie...]');
-            printOutput('[Localisation] Grille détectée : Univers système_12.8');
-            printOutput('[Système] Numérisation en cours...');
-            printOutput('[Système] Identité inconnue — utilisateur non enregistré.');
-            printOutput('▶ Action disponible :');
-            printOutput(`- ${allCommands.initializeUser}  // Générer une identité pour l'utilisateur`);
-            gameStage = 'awaitInitialize';
-          }
-          break;
-
-        case 'awaitInitialize':
-          if (equalsCommand(cmd, allCommands.initializeUser)) {
-            printOutput('[Système] Attribution du disque d\'identité...');
-            printOutput('[Résultat] : Disque affecté à : SAM_FLYNN');
-            printOutput('▶ Action suivante :');
-            printOutput(`- ${allCommands.runSecurityScan}  // Sécurité en cours`);
-            gameStage = 'afterInitialize';
-          }
-          break;
-
-        case 'afterInitialize':
-          if (equalsCommand(cmd, allCommands.runSecurityScan)) {
-            printOutput('[Système] Scan complet. Statut : ANOMALIE.');
-            printOutput('[ALERTE] Utilisateur non conforme. Reroutage vers l’arène de jeu...');
-            printOutput('▶ Téléportation en cours vers : Disc Wars');
-            gameStage = 'afterScan';
-          }
-          break;
-
-        case 'afterScan':
-          if (equalsCommand(cmd, allCommands.loadDiscWars)) {
-            printOutput('[Épreuve] Disc Wars — Adversaire : Classe élite | Identité : RINZLER');
-            printOutput('> Statut de SAM : inexpérimenté');
-            printOutput('> Victoire peu probable');
-            printOutput('Choisissez votre protocole de réaction :');
-            printOutput(`1. ${allCommands.canonProtocol}     // Suivre le film : Sam est vaincu mais capturé`);
-            printOutput(`2. ${allCommands.derezzOpponent}    // Vous tentez de tuer Rinzler`);
-            printOutput(`3. ${allCommands.pacifyCombat}      // Vous tentez une sortie pacifique`);
-            gameStage = 'discWars';
-          }
-          break;
-
-        case 'discWars':
-          if (equalsCommand(cmd, allCommands.canonProtocol)) {
-            printOutput('[Résultat] : Combat lancé. Rinzler neutralise Sam sans le derezzer.');
-            printOutput('[Conséquence] : Sam est capturé et emmené vers CLU.');
-            printOutput('▶ Chargement du processus de rencontre avec CLU...');
-            printOutput('Commandes disponibles : - proceedToCLU');
-            gameStage = 'final';
-          } else if (equalsCommand(cmd, allCommands.derezzOpponent)) {
-            printOutput('[Résultat] : Tentative d\'éradication de Rinzler échouée.');
-            printOutput('[Conséquence] : Combat engagé, forte résistance détectée.');
-            printOutput('Retentez une autre commande.');
-          } else if (equalsCommand(cmd, allCommands.pacifyCombat)) {
-            printOutput('[Résultat] : Tentative de paix acceptée par Rinzler.');
-            printOutput('[Conséquence] : Passage sécurisé vers la prochaine zone.');
-            printOutput('Commandes disponibles : - proceedToCLU');
-            gameStage = 'final';
-          }
-          break;
-
-                case 'final':
-          if (equalsCommand(cmd, allCommands.proceedToCLU)) {
-            printOutput('[Salle de contrôle] Instance maître détectée.');
-            printOutput('[Identification en cours...] CLU.02');
-            printOutput('CLU> "Bienvenue, programme. Nous avons attendu ce moment."');
-            printOutput('[Analyse] : CLU simule un comportement amical.');
-            printOutput('[Alerte] : Intégrité système compromise. Confiance non garantie.');
-
-            printOutput('Choisissez une réaction :');
-            printOutput(`1. trustCLU();       // Suivre le film : Sam fait confiance`);
-            printOutput(`2. confrontCLU();    // Sam confronte CLU immédiatement`);
-            printOutput(`3. forceExit();      // Tentative d'évasion manuelle`);
-
-            gameStage = 'meetingCLU';
-          }
-          break;
-
-        case 'meetingCLU':
-          if (equalsCommand(cmd, 'trustCLU()')) {
-            printOutput('[Dialogue] CLU présente une copie numérique de Kevin Flynn.');
-            printOutput('[Résultat] : Sam croit avoir retrouvé son père.');
-            printOutput('[Système] : Téléportation vers l’arène en cours...');
-            printOutput('[ALERTE] : CLU vous a piégé. Préparation d\'une exécution publique.');
-            printOutput('▶ Prochaine étape :');
-            printOutput('- launchLightCycleArena();');
-            gameStage = 'preLightCycle';
-          } else if (equalsCommand(cmd, 'confrontCLU()')) {
-            printOutput('[Action] : Sam remet en question l’identité de CLU.');
-            printOutput('CLU> "Tu es plus malin que je le pensais."');
-            printOutput('[Conséquence] : Agents de sécurité déployés. Niveau d’alerte maximal.');
-            printOutput('▶ Prochaine étape :');
-            printOutput('- launchLightCycleArena();');
-            gameStage = 'preLightCycle';
-          } else if (equalsCommand(cmd, 'forceExit()')) {
-            printOutput('[Système] : Tentative d’ouverture du portail en cours...');
-            printOutput('[Échec] : Portail bloqué par le noyau central de CLU.');
-            printOutput('[Conséquence] : Sam est désintégré. Fin alternative déclenchée.');
-            gameStage = 'deadEnd';
-            inputEl.disabled = true;
-            promptEl.textContent = '';
-            inputEl.placeholder = 'Session terminée.';
-          }
-          break;
-
-        case 'preLightCycle':
-          if (equalsCommand(cmd, 'launchLightCycleArena();')) {
-            printOutput('[Chargement] : Arène de Light Cycle en cours...');
-            printOutput('>>> Transition vers la scène suivante en préparation...');
-            // Tu peux ici continuer avec gameStage = 'lightCycleArena';
-            gameStage = 'lightCycleArena'; // prochaine étape à créer
-          }
-          break;
-
-        case 'deadEnd':
-          printOutput('[Session verrouillée] Tapez "restart" pour recommencer.');
-          break;
-
-        default:
-          printOutput('[INFO] Aucun scénario disponible.');
-      }
-    }
-
-    // === AJOUT POUR L'AUDIO ===
-
-    // Charger le son TRON (remplace par le chemin réel de ton fichier)
-    const audio = new Audio('SOUNDS/Ambiant - Yout.mp3');
-audio.loop = true;  // <--- ici on active la boucle
-audio.volume = 0.15;
-audio.play().catch(e => {
-  console.warn('Impossible de jouer le son automatiquement:', e);
-});
-
-    // === FIN AUDIO ===
-
-    function init() {
-      if (waitingUserName) {
-        printOutput('Bienvenue dans la Grille TRON. Veuillez saisir votre nom d’utilisateur :');
-        promptEl.textContent = '';
-      } else {
+    if (waitingUserName) {
+      if (cmd.length > 0) {
+        userName = cmd.toUpperCase();
+        localStorage.setItem(STORAGE_KEY, userName);
+        waitingUserName = false;
         promptEl.textContent = getPrompt();
-        printOutput(`Bienvenue ${userName} ! Tapez "help" pour la liste des commandes.`);
+        printOutput(`Greetings ${userName}, bienvenue dans la Grille.`);
+        printOutput(getHelpMessage());
       }
-      inputEl.focus();
-
-      // === AUTO LECTURE DU SON SI L'UTILISATEUR A INTERAGI SUR INDEX.HTML ===
-      const userHasInteracted = localStorage.getItem('userHasInteracted');
-      if (userHasInteracted === 'true') {
-        playSound();
-      }
+      return;
     }
 
-    inputEl.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        const inputVal = inputEl.value;
-        inputEl.value = '';
-        processCommand(inputVal);
-      }
-    });
+    if (cmd === 'reset' || cmd === 'restart') {
+      localStorage.removeItem(STORAGE_KEY);
+      location.reload();
+      return;
+    }
 
-    // Focus input si clic sur terminal
-    terminalEl.addEventListener('click', () => {
-      inputEl.focus();
-    });
+    if (cmd === 'help') {
+      printOutput(getHelpMessage());
+      return;
+    }
 
-    init();
-  })();
+    const validCmds = (commandsByStage[gameStage] || []).map(c => c.toLowerCase()).concat(['help', 'reset', 'restart']);
+
+    if (!validCmds.includes(cmd.toLowerCase())) {
+      printOutput(`${userName}> ${rawCmd}`);
+      printOutput('[ERROR] Commande inconnue ou hors contexte. Tapez "help" pour la liste des commandes valides.');
+      return;
+    }
+
+    printOutput(`${userName}> ${rawCmd}`);
+
+    switch (gameStage) {
+      case 'start':
+        if (equalsCommand(cmd, allCommands.enterGrid)) {
+          printOutput('[Connexion établie...]');
+          printOutput('[Localisation] Grille détectée : Univers système_12.8');
+          printOutput('[Système] Numérisation en cours...');
+          printOutput('[Système] Identité inconnue — utilisateur non enregistré.');
+          printOutput(`▶ Action disponible :\n- ${allCommands.initializeUser}`);
+          gameStage = 'awaitInitialize';
+        }
+        break;
+
+      case 'awaitInitialize':
+        if (equalsCommand(cmd, allCommands.initializeUser)) {
+          printOutput('[Système] Attribution du disque d\'identité...');
+          printOutput('[Résultat] : Disque affecté à : SAM_FLYNN');
+          printOutput(`▶ Action suivante :\n- ${allCommands.runSecurityScan}`);
+          gameStage = 'afterInitialize';
+        }
+        break;
+
+      case 'afterInitialize':
+        if (equalsCommand(cmd, allCommands.runSecurityScan)) {
+          printOutput('[Système] Scan complet. Statut : ANOMALIE.');
+          printOutput('[ALERTE] Utilisateur non conforme. Reroutage vers l’arène de jeu...');
+          gameStage = 'afterScan';
+        }
+        break;
+
+      case 'afterScan':
+        if (equalsCommand(cmd, allCommands.loadDiscWars)) {
+          printOutput('[Épreuve] Disc Wars — Adversaire : RINZLER');
+          printOutput('Choisissez votre protocole :');
+          printOutput(`1. ${allCommands.canonProtocol}`);
+          printOutput(`2. ${allCommands.derezzOpponent}`);
+          printOutput(`3. ${allCommands.pacifyCombat}`);
+          gameStage = 'discWars';
+        }
+        break;
+
+      case 'discWars':
+        if (equalsCommand(cmd, allCommands.canonProtocol)) {
+          printOutput('[Résultat] : Rinzler neutralise Sam. Capture initiée.');
+          printOutput(`▶ ${allCommands.proceedToCLU}`);
+          gameStage = 'final';
+        } else if (equalsCommand(cmd, allCommands.derezzOpponent)) {
+          printOutput('[Échec] : Sam est désarmé. Rinzler contre-attaque.');
+        } else if (equalsCommand(cmd, allCommands.pacifyCombat)) {
+          printOutput('[Succès] : Rinzler épargne Sam. Capture pacifique.');
+          printOutput(`▶ ${allCommands.proceedToCLU}`);
+          gameStage = 'final';
+        }
+        break;
+
+      case 'final':
+        if (equalsCommand(cmd, allCommands.proceedToCLU)) {
+          printOutput('[Salle de contrôle] CLU détecté.');
+          printOutput('"Bienvenue, programme. Nous avons attendu ce moment."');
+          printOutput('▶ Choisissez une réaction :');
+          printOutput(`- ${allCommands.trustCLU}`);
+          printOutput(`- ${allCommands.confrontCLU}`);
+          printOutput(`- ${allCommands.forceExit}`);
+          gameStage = 'meetingCLU';
+        }
+        break;
+
+      case 'meetingCLU':
+        if (equalsCommand(cmd, allCommands.trustCLU)) {
+          printOutput('[CLU] : Présente une illusion de Kevin Flynn.');
+          printOutput('[Résultat] : Téléportation vers arène piégée.');
+          printOutput(`▶ ${allCommands.launchLightCycleArena}`);
+          gameStage = 'preLightCycle';
+        } else if (equalsCommand(cmd, allCommands.confrontCLU)) {
+          printOutput('[Action] : Sam confronte CLU.');
+          printOutput('[Réaction] : Sécurité déclenchée.');
+          printOutput(`▶ ${allCommands.launchLightCycleArena}`);
+          gameStage = 'preLightCycle';
+        } else if (equalsCommand(cmd, allCommands.forceExit)) {
+          printOutput('[Tentative] : Évasion...');
+          printOutput('[Échec] : Sam est désintégré.');
+          gameStage = 'deadEnd';
+          inputEl.disabled = true;
+          promptEl.textContent = '';
+          inputEl.placeholder = 'Session terminée.';
+        }
+        break;
+
+      case 'preLightCycle':
+        if (equalsCommand(cmd, allCommands.launchLightCycleArena)) {
+          printOutput('[Chargement] : Arène Light Cycle...');
+          // prochaine étape ici
+        }
+        break;
+    }
+  }
+
+  function init() {
+    if (waitingUserName) {
+      printOutput('Bienvenue dans la Grille du système TRON. Veuillez saisir votre nom d’utilisateur :');
+      promptEl.textContent = '';
+    } else {
+      promptEl.textContent = getPrompt();
+      printOutput(`Bienvenue ${userName} ! Tapez "help" pour la liste des commandes.`);
+    }
+    inputEl.focus();
+  }
+
+  inputEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const inputVal = inputEl.value;
+      inputEl.value = '';
+      processCommand(inputVal);
+    }
+  });
+
+  terminalEl.addEventListener('click', () => {
+    inputEl.focus();
+  });
+
+  init();
+})();
+</script>
+<audio id="ambient-sound" src="SOUNDS/Ambiant - Yout.mp3" loop autoplay></audio>
+<script>
+  const audio = document.getElementById('ambient-sound');
+  audio.volume = 0.15;
+  audio.play().catch(() => {
+    // Certains navigateurs bloquent la lecture automatique
+    document.body.addEventListener('click', () => {
+      audio.play();
+    }, { once: true });
+  });
 </script>
 </body>
 </html>
