@@ -349,8 +349,10 @@ case 'rinzlerCombat':
             if (equalsCommand(cmd, allCommands.getUP)) {
               delayedOutput([
                 '[ACTION] RINZLER se lève et vous force à vous lever aussi.',
-                'JARVIS : "Veuillez vous identifier, Programme',
-                '▶ Saisir idUser() pour vous identifier auprès de Jarvis'
+                'JARVIS : "Veuillez vous identifier, Programme."',
+                'VOUS : "Je ne suis pas un Programme."',
+                '? : "IDENTIFIE-TOI."',
+                '▶ Saisir idUser() pour vous identifier auprès de Jarvis.'
               ]);
             } else if (equalsCommand(cmd, allCommands.idUser)) {
             delayedOutput([
@@ -366,7 +368,7 @@ case 'rinzlerCombat':
         case 'cluEncounter':
           if (equalsCommand(cmd, allCommands.talkCLU)) {
             delayedOutput([
-              '[RENCONTRE] Transmission sécurisée établie.',
+              '[ACTION] RINZLER vous emmène dans la salle de contrôle trônant au dessus de l\'Arène.',
               'Kevin? : "Sam... regarde-toi mon grand tu as tellement grandi."',
               '[ETAT] Destabilisation',
               'Kevin? : "Il s\'en est passé des choses, plus que tu ne saurais l\'imaginer."',
