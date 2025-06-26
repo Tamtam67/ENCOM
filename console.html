@@ -130,12 +130,17 @@
   let waitingUserName = !savedName;
   let gameStage = 'start';
 
+  let discWarsTurn = 0;
+
   const allCommands = {
     enterGrid: 'enterGrid()',
     resistCapture: 'resistCapture()',
     acceptCapture: 'acceptCapture()',
     assignGames: 'assignGames()',
     getDisc: 'getDisc()',
+    attack: 'attack()',
+    dodge: 'dodge()',
+    specialMove: 'specialMove()',
     help: 'help',
     reset: 'reset',
     restart: 'restart'
@@ -145,7 +150,8 @@
     start: [allCommands.enterGrid],
     gridArrival: [allCommands.resistCapture, allCommands.acceptCapture],
     postCapture: [allCommands.assignGames],
-    assignGames: [allCommands.getDisc]
+    assignGames: [allCommands.getDisc],
+    discWars: [allCommands.attack, allCommands.dodge, allCommands.specialMove]
   };
 
   function printOutput(text) {
@@ -158,11 +164,6 @@
 
   function getPrompt() {
     return waitingUserName ? '' : `${userName}>`;
-  }
-
-  function showAvailableCommands(cmds) {
-    printOutput('▶ Commandes disponibles :');
-    cmds.forEach(c => printOutput(`- ${c}`));
   }
 
   function getHelpMessage() {
@@ -221,7 +222,7 @@
           printOutput('[SCAN] Analyse verticale en cours...');
           printOutput('[ALERTE] Deux gardes détectés');
           printOutput('Garde : "Vagabond détecté. Capture."');
-          showAvailableCommands([allCommands.resistCapture, allCommands.acceptCapture]);
+          printOutput('▶ Résister ou se laisser faire ?');
           gameStage = 'gridArrival';
         }
         break;
@@ -232,13 +233,12 @@
           printOutput('[RESULTAT] Choc électrique reçu. Paralysie temporaire.');
           printOutput('Sam : "Aaah ! Qu’est-ce que...?"');
           printOutput('Garde : "Transfert aux jeux."');
-          printOutput(`▶ Tapez ${allCommands.assignGames} pour continuer`);
           gameStage = 'postCapture';
-        } else if (equalsCommand(cmd, allCommands.acceptCapture)) {
+        }
+        if (equalsCommand(cmd, allCommands.acceptCapture)) {
           printOutput('[ACTION] Capture acceptée. Immobilisation immédiate.');
           printOutput('Sam : "Hé... où est-ce que vous m’emmenez ?"');
           printOutput('Garde : "Transfert aux jeux."');
-          printOutput(`▶ Tapez ${allCommands.assignGames} pour continuer`);
           gameStage = 'postCapture';
         }
         break;
@@ -249,7 +249,7 @@
           printOutput('[SYSTEME] Préparation du sujet pour les jeux...');
           printOutput('[ACTION] Vêtements retirés, combinaison lumineuse appliquée');
           printOutput('[REQUETE] Disque d\'identité requis');
-          showAvailableCommands([allCommands.getDisc]);
+          printOutput(`▶ Commande suivante : ${allCommands.getDisc}`);
           gameStage = 'assignGames';
         }
         break;
@@ -261,8 +261,57 @@
           printOutput('[STATUT] Inconnu. Menace potentielle.');
           printOutput('[INFO] Ce disque contient code source, mémoire, actions.');
           printOutput('▶ Transition vers : Arène Disc Wars...');
-          // prochaine scène ici (à enchaîner dans update future)
+          printOutput('▶ Préparez-vous au combat. Commandes : attack(), dodge(), specialMove()');
+          gameStage = 'discWars';
+          discWarsTurn = 0;
         }
+        break;
+
+      case 'discWars':
+        discWarsTurn++;
+        if (equalsCommand(cmd, allCommands.attack)) {
+          if (discWarsTurn === 1) {
+            printOutput('[ACTION] Vous lancez votre disque, mais Rinzler l\'évite sans effort.');
+            printOutput('Rinzler avance vers vous, inarrêtable.');
+          } else if (discWarsTurn === 3) {
+            printOutput('[ACTION] Nouvelle attaque désespérée.');
+            printOutput('Rinzler bloque votre disque d’un simple geste.');
+          } else {
+            printOutput('[ACTION] Votre attaque est déviée, vous perdez l’équilibre.');
+            printOutput('Rinzler se rapproche, sa présence est oppressante.');
+          }
+        } else if (equalsCommand(cmd, allCommands.dodge)) {
+          if (discWarsTurn === 2) {
+            printOutput('[ACTION] Vous tentez d\'esquiver une attaque rapide.');
+            printOutput('Mais vous êtes trop lent, vous heurtez le sol.');
+          } else if (discWarsTurn === 4) {
+            printOutput('[ACTION] Nouvelle tentative d\'esquive.');
+            printOutput('Rinzler vous accule dans un coin, sans pitié.');
+          } else {
+            printOutput('[ACTION] Vous vacillez, incapable d\'éviter le coup suivant.');
+          }
+        } else if (equalsCommand(cmd, allCommands.specialMove)) {
+          if (discWarsTurn === 5) {
+            printOutput('[ACTION] Vous essayez une technique spéciale.');
+            printOutput('Mais elle échoue, Rinzler vous intercepte immédiatement.');
+            printOutput('Votre disque est brisé.');
+          } else {
+            printOutput('[ACTION] Vous n\'êtes pas prêt à utiliser cette technique.');
+          }
+        } else {
+          printOutput('[ERREUR] Commande inconnue à ce stade. Tapez "help".');
+        }
+
+        if (discWarsTurn === 6) {
+          printOutput('Rinzler vous projette violemment au sol.');
+          printOutput('Vous perdez conscience, vaincu.');
+          printOutput('▶ Fin de la simulation Disc Wars. Tapez "reset" ou "restart" pour recommencer.');
+          gameStage = 'end';
+        }
+        break;
+
+      case 'end':
+        printOutput('Simulation terminée. Tapez "reset" ou "restart" pour rejouer.');
         break;
     }
   }
