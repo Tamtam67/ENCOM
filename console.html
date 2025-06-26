@@ -142,6 +142,7 @@
       derezzOpponent: 'derezzOpponent()',
       pacifyCombat: 'pacifyCombat()',
       proceedToCLU: 'proceedToCLU()',
+      launchLightCycleArena: 'launchLightCycleArena()',
       reset: 'reset',
       restart: 'restart',
       help: 'help'
@@ -155,6 +156,8 @@
       afterScan: [allCommands.loadDiscWars],
       discWars: [allCommands.canonProtocol, allCommands.derezzOpponent, allCommands.pacifyCombat],
       final: [allCommands.proceedToCLU],
+      commandsByStage.preLightCycle = ['launchLightCycleArena();'];
+      commandsByStage.meetingCLU = ['trustCLU();', 'confrontCLU();', 'forceExit();'];
     };
 
     function printOutput(text) {
@@ -283,13 +286,61 @@
           }
           break;
 
-        case 'final':
+                case 'final':
           if (equalsCommand(cmd, allCommands.proceedToCLU)) {
-            printOutput('[Chargement] Rencontre avec CLU activée...');
-            printOutput('Simulation terminée. Merci d\'avoir joué.');
-            gameStage = 'end';
-            inputEl.disabled = true;
+            printOutput('[Salle de contrôle] Instance maître détectée.');
+            printOutput('[Identification en cours...] CLU.02');
+            printOutput('CLU> "Bienvenue, programme. Nous avons attendu ce moment."');
+            printOutput('[Analyse] : CLU simule un comportement amical.');
+            printOutput('[Alerte] : Intégrité système compromise. Confiance non garantie.');
+
+            printOutput('Choisissez une réaction :');
+            printOutput(`1. trustCLU();       // Suivre le film : Sam fait confiance`);
+            printOutput(`2. confrontCLU();    // Sam confronte CLU immédiatement`);
+            printOutput(`3. forceExit();      // Tentative d'évasion manuelle`);
+
+            gameStage = 'meetingCLU';
           }
+          break;
+
+        case 'meetingCLU':
+          if (equalsCommand(cmd, 'trustCLU()')) {
+            printOutput('[Dialogue] CLU présente une copie numérique de Kevin Flynn.');
+            printOutput('[Résultat] : Sam croit avoir retrouvé son père.');
+            printOutput('[Système] : Téléportation vers l’arène en cours...');
+            printOutput('[ALERTE] : CLU vous a piégé. Préparation d\'une exécution publique.');
+            printOutput('▶ Prochaine étape :');
+            printOutput('- launchLightCycleArena();');
+            gameStage = 'preLightCycle';
+          } else if (equalsCommand(cmd, 'confrontCLU()')) {
+            printOutput('[Action] : Sam remet en question l’identité de CLU.');
+            printOutput('CLU> "Tu es plus malin que je le pensais."');
+            printOutput('[Conséquence] : Agents de sécurité déployés. Niveau d’alerte maximal.');
+            printOutput('▶ Prochaine étape :');
+            printOutput('- launchLightCycleArena();');
+            gameStage = 'preLightCycle';
+          } else if (equalsCommand(cmd, 'forceExit()')) {
+            printOutput('[Système] : Tentative d’ouverture du portail en cours...');
+            printOutput('[Échec] : Portail bloqué par le noyau central de CLU.');
+            printOutput('[Conséquence] : Sam est désintégré. Fin alternative déclenchée.');
+            gameStage = 'deadEnd';
+            inputEl.disabled = true;
+            promptEl.textContent = '';
+            inputEl.placeholder = 'Session terminée.';
+          }
+          break;
+
+        case 'preLightCycle':
+          if (equalsCommand(cmd, 'launchLightCycleArena();')) {
+            printOutput('[Chargement] : Arène de Light Cycle en cours...');
+            printOutput('>>> Transition vers la scène suivante en préparation...');
+            // Tu peux ici continuer avec gameStage = 'lightCycleArena';
+            gameStage = 'lightCycleArena'; // prochaine étape à créer
+          }
+          break;
+
+        case 'deadEnd':
+          printOutput('[Session verrouillée] Tapez "restart" pour recommencer.');
           break;
 
         default:
