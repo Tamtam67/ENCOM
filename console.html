@@ -132,31 +132,20 @@
 
   const allCommands = {
     enterGrid: 'enterGrid()',
-    initializeUser: 'initializeUser()',
-    runSecurityScan: 'runSecurityScan()',
-    loadDiscWars: 'loadDiscWars()',
-    canonProtocol: 'canonProtocol()',
-    derezzOpponent: 'derezzOpponent()',
-    pacifyCombat: 'pacifyCombat()',
-    proceedToCLU: 'proceedToCLU()',
-    trustCLU: 'trustCLU()',
-    confrontCLU: 'confrontCLU()',
-    forceExit: 'forceExit()',
-    launchLightCycleArena: 'launchLightCycleArena()',
+    resistCapture: 'resistCapture()',
+    acceptCapture: 'acceptCapture()',
+    assignGames: 'assignGames()',
+    getDisc: 'getDisc()',
+    help: 'help',
     reset: 'reset',
-    restart: 'restart',
-    help: 'help'
+    restart: 'restart'
   };
 
   const commandsByStage = {
     start: [allCommands.enterGrid],
-    awaitInitialize: [allCommands.initializeUser],
-    afterInitialize: [allCommands.runSecurityScan],
-    afterScan: [allCommands.loadDiscWars],
-    discWars: [allCommands.canonProtocol, allCommands.derezzOpponent, allCommands.pacifyCombat],
-    final: [allCommands.proceedToCLU],
-    meetingCLU: [allCommands.trustCLU, allCommands.confrontCLU, allCommands.forceExit],
-    preLightCycle: [allCommands.launchLightCycleArena]
+    gridArrival: [allCommands.resistCapture, allCommands.acceptCapture],
+    postCapture: [allCommands.assignGames],
+    assignGames: [allCommands.getDisc]
   };
 
   function printOutput(text) {
@@ -190,7 +179,8 @@
         localStorage.setItem(STORAGE_KEY, userName);
         waitingUserName = false;
         promptEl.textContent = getPrompt();
-        printOutput(`Greetings ${userName}, bienvenue dans la Grille.`);
+        printOutput(`Identité reçue. Bienvenue ${userName}.`);
+        printOutput(`Initialisation du système en cours...`);
         printOutput(getHelpMessage());
       }
       return;
@@ -211,7 +201,7 @@
 
     if (!validCmds.includes(cmd.toLowerCase())) {
       printOutput(`${userName}> ${rawCmd}`);
-      printOutput('[ERROR] Commande inconnue ou hors contexte. Tapez "help" pour la liste des commandes valides.');
+      printOutput('[ERREUR] Commande inconnue ou indisponible à ce stade. Tapez "help" pour voir les commandes disponibles.');
       return;
     }
 
@@ -220,94 +210,51 @@
     switch (gameStage) {
       case 'start':
         if (equalsCommand(cmd, allCommands.enterGrid)) {
-          printOutput('[Connexion établie...]');
-          printOutput('[Localisation] Grille détectée : Univers système_12.8');
-          printOutput('[Système] Numérisation en cours...');
-          printOutput('[Système] Identité inconnue — utilisateur non enregistré.');
-          printOutput(`▶ Action disponible :\n- ${allCommands.initializeUser}`);
-          gameStage = 'awaitInitialize';
+          printOutput('[Connexion entrante...]');
+          printOutput('[Système] Transfert numérique en cours...');
+          printOutput('*FLASH* — Vous atterrissez brutalement sur une plateforme luminescente.');
+          printOutput('Une lumière verticale vous scanne de la tête aux pieds.');
+          printOutput('Deux gardes approchent.');
+          printOutput('Garde : "Vagabond détecté. Capture."');
+          printOutput(`▶ Résister ou se laisser faire ?`);
+          gameStage = 'gridArrival';
         }
         break;
 
-      case 'awaitInitialize':
-        if (equalsCommand(cmd, allCommands.initializeUser)) {
-          printOutput('[Système] Attribution du disque d\'identité...');
-          printOutput('[Résultat] : Disque affecté à : SAM_FLYNN');
-          printOutput(`▶ Action suivante :\n- ${allCommands.runSecurityScan}`);
-          gameStage = 'afterInitialize';
+      case 'gridArrival':
+        if (equalsCommand(cmd, allCommands.resistCapture)) {
+          printOutput('[Action] Vous tentez de vous débattre...');
+          printOutput('[Résultat] : Choc électrique. Paralysie temporaire.');
+          printOutput('Sam : "Aaah ! Qu’est-ce que...?"');
+          printOutput('Garde : "Transfert aux jeux."');
+          gameStage = 'postCapture';
+        }
+        if (equalsCommand(cmd, allCommands.acceptCapture)) {
+          printOutput('[Action] Vous ne résistez pas. Les gardes vous saisissent.');
+          printOutput('Sam : "Hé... où est-ce que vous m’emmenez ?"');
+          printOutput('Garde : "Transfert aux jeux."');
+          gameStage = 'postCapture';
         }
         break;
 
-      case 'afterInitialize':
-        if (equalsCommand(cmd, allCommands.runSecurityScan)) {
-          printOutput('[Système] Scan complet. Statut : ANOMALIE.');
-          printOutput('[ALERTE] Utilisateur non conforme. Reroutage vers l’arène de jeu...');
-          gameStage = 'afterScan';
+      case 'postCapture':
+        if (equalsCommand(cmd, allCommands.assignGames)) {
+          printOutput('[Lieu] : Salle d’attribution.');
+          printOutput('Voix : "Préparation du sujet pour les jeux..."');
+          printOutput('Des bras mécaniques arrachent vos vêtements, remplacés par une combinaison lumineuse.');
+          printOutput('Programme : "Disque d\'identité requis."');
+          printOutput(`▶ Commande suivante : ${allCommands.getDisc}`);
+          gameStage = 'assignGames';
         }
         break;
 
-      case 'afterScan':
-        if (equalsCommand(cmd, allCommands.loadDiscWars)) {
-          printOutput('[Épreuve] Disc Wars — Adversaire : RINZLER');
-          printOutput('Choisissez votre protocole :');
-          printOutput(`1. ${allCommands.canonProtocol}`);
-          printOutput(`2. ${allCommands.derezzOpponent}`);
-          printOutput(`3. ${allCommands.pacifyCombat}`);
-          gameStage = 'discWars';
-        }
-        break;
-
-      case 'discWars':
-        if (equalsCommand(cmd, allCommands.canonProtocol)) {
-          printOutput('[Résultat] : Rinzler neutralise Sam. Capture initiée.');
-          printOutput(`▶ ${allCommands.proceedToCLU}`);
-          gameStage = 'final';
-        } else if (equalsCommand(cmd, allCommands.derezzOpponent)) {
-          printOutput('[Échec] : Sam est désarmé. Rinzler contre-attaque.');
-        } else if (equalsCommand(cmd, allCommands.pacifyCombat)) {
-          printOutput('[Succès] : Rinzler épargne Sam. Capture pacifique.');
-          printOutput(`▶ ${allCommands.proceedToCLU}`);
-          gameStage = 'final';
-        }
-        break;
-
-      case 'final':
-        if (equalsCommand(cmd, allCommands.proceedToCLU)) {
-          printOutput('[Salle de contrôle] CLU détecté.');
-          printOutput('"Bienvenue, programme. Nous avons attendu ce moment."');
-          printOutput('▶ Choisissez une réaction :');
-          printOutput(`- ${allCommands.trustCLU}`);
-          printOutput(`- ${allCommands.confrontCLU}`);
-          printOutput(`- ${allCommands.forceExit}`);
-          gameStage = 'meetingCLU';
-        }
-        break;
-
-      case 'meetingCLU':
-        if (equalsCommand(cmd, allCommands.trustCLU)) {
-          printOutput('[CLU] : Présente une illusion de Kevin Flynn.');
-          printOutput('[Résultat] : Téléportation vers arène piégée.');
-          printOutput(`▶ ${allCommands.launchLightCycleArena}`);
-          gameStage = 'preLightCycle';
-        } else if (equalsCommand(cmd, allCommands.confrontCLU)) {
-          printOutput('[Action] : Sam confronte CLU.');
-          printOutput('[Réaction] : Sécurité déclenchée.');
-          printOutput(`▶ ${allCommands.launchLightCycleArena}`);
-          gameStage = 'preLightCycle';
-        } else if (equalsCommand(cmd, allCommands.forceExit)) {
-          printOutput('[Tentative] : Évasion...');
-          printOutput('[Échec] : Sam est désintégré.');
-          gameStage = 'deadEnd';
-          inputEl.disabled = true;
-          promptEl.textContent = '';
-          inputEl.placeholder = 'Session terminée.';
-        }
-        break;
-
-      case 'preLightCycle':
-        if (equalsCommand(cmd, allCommands.launchLightCycleArena)) {
-          printOutput('[Chargement] : Arène Light Cycle...');
-          // prochaine étape ici
+      case 'assignGames':
+        if (equalsCommand(cmd, allCommands.getDisc)) {
+          printOutput('[Système] Disque d\'identité activé. Lien utilisateur : SAM_FLYNN');
+          printOutput('Statut : Inconnu. Menace potentielle.');
+          printOutput('[Info] Ce disque contient votre code source, votre mémoire et vos actions.');
+          printOutput('▶ Transition en cours vers : Arène de Disc Wars...');
+          // prochaine scène ici (à enchaîner dans update future)
         }
         break;
     }
@@ -344,7 +291,6 @@
   const audio = document.getElementById('ambient-sound');
   audio.volume = 0.15;
   audio.play().catch(() => {
-    // Certains navigateurs bloquent la lecture automatique
     document.body.addEventListener('click', () => {
       audio.play();
     }, { once: true });
