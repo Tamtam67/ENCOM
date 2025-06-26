@@ -296,32 +296,32 @@ const commandsByStage = {
             }
             break;
 
-          case 'discWars':
-  if (equalsCommand(cmd, allCommands.scan)) {
-    delayedOutput([
-      '[SCAN ENNEMI] Cible : RINZLER',
-      '[STATUT] Garde Noir',
-      '[ORIGINE] E̶̱̜̕N̷̲̈C̶̨̊͊_̸̫̖͠0̷̗͉̿M̶͕̀͑ ̴̹͗Š̶͎͆Y̴̯̖͐̓_̷̺͛S̵̢̳̄T̶͎͈͒3̴̤͝_̵̺̘̽̓M̴̼̮̑',
-      '[AVERTISSEMENT] Niveau de menace maximal'
-    ]);
-  }
+                  case 'discWars':
+          if (equalsCommand(cmd, allCommands.scan)) {
+            delayedOutput([
+              '[SCAN ENNEMI] Cible : RINZLER',
+              '[STATUT] Garde Noir',
+              '[ORIGINE] E̶̱̜̕N̷̲̈C̶̨̊͊_̸̫̖͠0̷̗͉̿M̶͕̀͑ ̴̹͗Š̶͎͆Y̴̯̖͐̓_̷̺͛S̵̢̳̄T̶͎͈͒3̴̤͝_̵̺̘̽̓M̴̼̮̑',
+              '[AVERTISSEMENT] Niveau de menace maximal'
+            ]);
+          }
 
-  if (equalsCommand(cmd, allCommands.fight)) {
-    delayedOutput([
-      '[COMBAT] Début de Disc Wars...',
-      '[ENEMY] RINZLER entre dans l’arène.',
-      '[ACTION] Lancer du disque échoué. RINZLER esquive.',
-      '[REPONSE] RINZLER riposte avec précision...',
-      '[TOUCHÉ] Impact au bras. Intégrité corporelle 99.9%.',
-      '[ANALYSE EN COURS]... Anomalie détectée.',
-      '[AVERTISSEMENT] CONCEPTEUR',
-      '[RINZLER] Blocage du mouvement.',
-      'RINZLER : "Concepteur..."',
-      '▶ Commandes possibles : dodge(), counter(), yield()'
-    ]);
-    gameStage = 'rinzlerCombat';
-  }
-  break;
+          if (equalsCommand(cmd, allCommands.fight)) {
+            delayedOutput([
+              '[COMBAT] Début de Disc Wars...',
+              '[ENEMY] RINZLER entre dans l’arène.',
+              '[ACTION] Lancer du disque échoué. RINZLER esquive.',
+              '[REPONSE] RINZLER riposte avec précision...',
+              '[TOUCHÉ] Impact au bras. Intégrité corporelle 99.9%.',
+              '[ANALYSE EN COURS]... Anomalie détectée.',
+              '[AVERTISSEMENT] CONCEPTEUR',
+              '[RINZLER] Blocage du mouvement.',
+              'RINZLER : "Concepteur..."',
+              '▶ Commandes possibles : dodge(), counter(), yield()'
+            ]);
+            gameStage = 'rinzlerCombat';
+          }
+          break;
 
 case 'rinzlerCombat':
   if (['dodge()', 'counter()', 'yield()'].includes(cmd.toLowerCase())) {
@@ -340,45 +340,45 @@ case 'rinzlerCombat':
   }
   break;
 
-case 'cluEncounter':
-  if (equalsCommand(cmd, allCommands.talkCLU)) {
-    delayedOutput([
-      '[RENCONTRE] Transmission sécurisée établie.',
-      'Kevin? : "Sam... regarde-toi mon grand tu as tellement grandi."',
-      '[ETAT] Destabilisation',
-      'Kevin? : "Il s\'en est passé des choses, plus que tu ne saurais l\'imaginer."',
-      '[INFO] Tentative d’usurpation de signature numérique détectée.',
-      '▶ Utilisez scanCLU() ou scanSam() pour enquêter.'
-    ]);
-  } else if (equalsCommand(cmd, allCommands.scanCLU)) {
-    delayedOutput([
-      '[SCAN] Sujet : C.L.U. 2.0',
-      '[STATUT] Surintendant du système',
-      '[ID] Codified Likeness Utility',
-      '[SIGNATURE ADN] Programme de perfectionnement.',
-      '[ALERTE] Identité incertaine'
-    ]);
-  } else if (equalsCommand(cmd, allCommands.scanSam)) {
-    delayedOutput([
-      '[SCAN] Sujet : SAM FLYNN',
-      '[STATUT] Concepteur',
-      '[ADN] Authentifié',
-      '[PRIORITÉ] MAXIMALE',
-      '[AVERTISSEMENT] Mise sous surveillance immédiate'
-    ]);
-  } else if (equalsCommand(cmd, allCommands.resistCLU)) {
-    delayedOutput([
-      '[ACTION] C.L.U. est démasqué.',
-      '[CLU] "Je ne suis pas ton père Sam. Mais te voir ici me rend vraiment très heureux."',
-      '[SYSTEME] Envoi vers l’arène Lightcycle...',
-      '[ENVIRONNEMENT] Sol en verre noir, motos lumineuses alignées',
-      '▶ Commandes bientôt disponibles pour le Bloc 4 (course de Lightcycle)'
-    ]);
-    gameStage = 'lightcycleArena'; // à créer plus tard
-  } else {
-    printOutput('[ERREUR] Commande invalide. Tapez "help" pour voir les options.');
-  }
-  break;            
+        case 'cluEncounter':
+          if (equalsCommand(cmd, allCommands.talkCLU)) {
+            delayedOutput([
+              '[RENCONTRE] Transmission sécurisée établie.',
+              'Kevin? : "Sam... regarde-toi mon grand tu as tellement grandi."',
+              '[ETAT] Destabilisation',
+              'Kevin? : "Il s\'en est passé des choses, plus que tu ne saurais l\'imaginer."',
+              '[INFO] Tentative d’usurpation de signature numérique détectée.',
+              '▶ Utilisez scanCLU() pour enquêter.'
+            ]);
+          } else if (equalsCommand(cmd, allCommands.scanCLU)) {
+            delayedOutput([
+              '[SCAN] Sujet : C.L.U. 2.0',
+              '[STATUT] Surintendant du système',
+              '[ID] Codified Likeness Utility',
+              '[SIGNATURE ADN] Programme de perfectionnement.',
+              '[ALERTE] Identité incertaine'
+            ]);
+          } else if (equalsCommand(cmd, allCommands.scanSam)) {
+            delayedOutput([
+              '[SCAN] Sujet : SAM FLYNN',
+              '[STATUT] Concepteur',
+              '[ADN] Authentifié',
+              '[PRIORITÉ] MAXIMALE',
+              '[AVERTISSEMENT] Mise sous surveillance immédiate'
+            ]);
+          } else if (equalsCommand(cmd, allCommands.resistCLU)) {
+            delayedOutput([
+              '[ACTION] C.L.U. est démasqué.',
+              '[CLU] "Je ne suis pas ton père Sam. Mais te voir ici me rend vraiment très heureux."',
+              '[SYSTEME] Envoi vers l’arène Lightcycle...',
+              '[ENVIRONNEMENT] Sol en verre noir, motos lumineuses alignées',
+              '▶ Commandes bientôt disponibles pour le Bloc 4 (course de Lightcycle)'
+            ]);
+            gameStage = 'lightcycleArena'; // À développer
+          } else {
+            printOutput('[ERREUR] Commande invalide. Tapez "help" pour voir les options.');
+          }
+          break;          
         }
       }
 
