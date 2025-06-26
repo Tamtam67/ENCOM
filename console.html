@@ -217,7 +217,7 @@
               printOutput('[ENV] Atterrissage sur plateforme luminescente');
               printOutput('[SCAN] Analyse verticale en cours...');
               printOutput('[ALERTE] Deux gardes détectés');
-              printOutput('Garde : "Vagabond détecté. Capture."');
+              printOutput('Garde : "Ce programme n\'a pas de disque. Encore un vagabond.');
               printOutput('▶ Résister ou se laisser faire ?');
               gameStage = 'gridArrival';
             }
@@ -228,7 +228,8 @@
               printOutput(equalsCommand(cmd, allCommands.resistCapture)
                 ? '[ACTION] Résistance engagée\n[RESULTAT] Choc électrique reçu. Paralysie temporaire.'
                 : '[ACTION] Capture acceptée. Immobilisation immédiate.');
-              printOutput('Garde : "Transfert aux jeux."');
+              printOutput('[SCAN] JEUX');
+              printOutput('Garde : "Jeux."');
               gameStage = 'postCapture';
             }
             break;
@@ -246,10 +247,11 @@
 
           case 'assignGames':
             if (equalsCommand(cmd, allCommands.getDisc)) {
+              printOutput('[INFO] Attention programme. Vous allez recevoir un disque d\'identité. Tout ce que vous ferez ou apprendrez sera enregistré sur ce disque. Si vous perdez vôtre disque ou refusez d\'executer les ordres, vous ferez l\'objet d\'une dissolution immédiate.');
               printOutput('[SYSTEME] Disque d\'identité activé');
               printOutput('[UTILISATEUR] Lien établi : UNKNOWN');
               printOutput('[STATUT] Inconnu.');
-              printOutput('[INFO] Attention programme. Vous allez recevoir un disque d\'identité. Tout ce que vous ferez ou apprendrez sera enregistré sur ce disque. Si vous perdez vôtre disque ou refusez d\'executer les ordres, vous ferez l\'objet d\'une dissolution immédiate.');
+              printOutput('[ORIGINE] Inconnu.');
               printOutput('▶ Transition vers : Arène Disc Wars...');
               gameStage = 'discWars';
             }
@@ -268,10 +270,11 @@
               printOutput('[ENEMY] RINZLER entre dans l’arène.');
               printOutput('[ACTION] Lancer du disque échoué. RINZLER esquive.');
               printOutput('[REPONSE] RINZLER riposte avec précision...');
-              printOutput('[TOUCHÉ] Impact au bras. Douleur intense.');
+              printOutput('[TOUCHÉ] Impact au bras. Intégrité corporelle 99.9%.');
               printOutput('[ANALYSE EN COURS]... Anomalie détectée.');
-              printOutput('[AVERTISSEMENT] Concepteur détecté');
-              printOutput('[RINZLER] Blocage soudain du mouvement.');
+              printOutput('[AVERTISSEMENT] CONCEPTEUR');
+              printOutput('[RINZLER] Blocage du mouvement.');
+              printOutput('RINZLER : "Concepteur..."');
               printOutput('▶ Aucun choix : le combat continue...');
             }
             break;
