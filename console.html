@@ -281,30 +281,48 @@
             break;
 
           case 'discWars':
-            if (equalsCommand(cmd, allCommands.scan)) {
-              delayedOutput([
-                '[SCAN ENNEMI] Cible : RINZLER',
-                '[STATUT] Garde Noir',
-                '[ORIGINE] E̶̱̜̕N̷̲̈C̶̨̊͊_̸̫̖͠0̷̗͉̿M̶͕̀͑ ̴̹͗Š̶͎͆Y̴̯̖͐̓_̷̺͛S̵̢̳̄T̶͎͈͒3̴̤͝_̵̺̘̽̓M̴̼̮̑',
-                '[AVERTISSEMENT] Niveau de menace maximal'
-              ]);
-            }
+  if (equalsCommand(cmd, allCommands.scan)) {
+    delayedOutput([
+      '[SCAN ENNEMI] Cible : RINZLER',
+      '[STATUT] Garde Noir',
+      '[ORIGINE] E̶̱̜̕N̷̲̈C̶̨̊͊_̸̫̖͠0̷̗͉̿M̶͕̀͑ ̴̹͗Š̶͎͆Y̴̯̖͐̓_̷̺͛S̵̢̳̄T̶͎͈͒3̴̤͝_̵̺̘̽̓M̴̼̮̑',
+      '[AVERTISSEMENT] Niveau de menace maximal'
+    ]);
+  }
 
-            if (equalsCommand(cmd, allCommands.fight)) {
-              delayedOutput([
-                '[COMBAT] Début de Disc Wars...',
-                '[ENEMY] RINZLER entre dans l’arène.',
-                '[ACTION] Lancer du disque échoué. RINZLER esquive.',
-                '[REPONSE] RINZLER riposte avec précision...',
-                '[TOUCHÉ] Impact au bras. Intégrité corporelle 99.9%.',
-                '[ANALYSE EN COURS]... Anomalie détectée.',
-                '[AVERTISSEMENT] CONCEPTEUR',
-                '[RINZLER] Blocage du mouvement.',
-                'RINZLER : "Concepteur..."',
-                '▶ Aucun choix : le combat continue...'
-              ]);
-            }
-            break;
+  if (equalsCommand(cmd, allCommands.fight)) {
+    delayedOutput([
+      '[COMBAT] Début de Disc Wars...',
+      '[ENEMY] RINZLER entre dans l’arène.',
+      '[ACTION] Lancer du disque échoué. RINZLER esquive.',
+      '[REPONSE] RINZLER riposte avec précision...',
+      '[TOUCHÉ] Impact au bras. Intégrité corporelle 99.9%.',
+      '[ANALYSE EN COURS]... Anomalie détectée.',
+      '[AVERTISSEMENT] CONCEPTEUR',
+      '[RINZLER] Blocage du mouvement.',
+      'RINZLER : "Concepteur..."',
+      '▶ Commandes possibles : dodge(), counter(), yield()'
+    ]);
+    gameStage = 'rinzlerCombat';
+  }
+  break;
+
+case 'rinzlerCombat':
+  if (['dodge()', 'counter()', 'yield()'].includes(cmd.toLowerCase())) {
+    delayedOutput([
+      `[INPUT] ${cmd}`,
+      '[ACTION BLOQUÉE] Analyse comportementale...',
+      '[INFO] Libre arbitre simulé.',
+      '[RINZLER] Interruption du protocole de frappe.',
+      '[RECONNAISSANCE] Signature identifiée : CONCEPTEUR',
+      '[RINZLER] Blocage du mouvement.',
+      'RINZLER : "Concepteur..."',
+    ]);
+    gameStage = 'archivesAccess'; // pour de futurs ajouts
+  } else {
+    printOutput('[ERREUR] Choix invalide. Essayez : dodge(), counter(), yield()');
+  }
+  break;
         }
       }
 
