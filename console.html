@@ -130,27 +130,43 @@
       let waitingUserName = !savedName;
       let gameStage = 'start';
 
-      const allCommands = {
-        enterGrid: 'enterGrid()',
-        resistCapture: 'resistCapture()',
-        acceptCapture: 'acceptCapture()',
-        assignGames: 'assignGames()',
-        getDisc: 'getDisc()',
-        fight: 'fightRinzler()',
-        scan: 'scanEnemy()',
-        help: 'help',
-        reset: 'reset',
-        restart: 'restart'
-      };
+  const allCommands = {
+  enterGrid: 'enterGrid()',
+  resistCapture: 'resistCapture()',
+  acceptCapture: 'acceptCapture()',
+  assignGames: 'assignGames()',
+  getDisc: 'getDisc()',
+  fight: 'fightRinzler()',
+  scan: 'scanEnemy()',
+  talkCLU: 'talkCLU()',
+  resistCLU: 'resistCLU()',
+  scanCLU: 'scanCLU()',
+  scanSam: 'scanSam()',
+  help: 'help',
+  reset: 'reset',
+  restart: 'restart',
+  dodge: 'dodge()',
+  counter: 'counter()',
+  yield: 'yield()'
+};
 
-      const commandsByStage = {
-        start: [allCommands.enterGrid],
-        gridArrival: [allCommands.resistCapture, allCommands.acceptCapture],
-        postCapture: [allCommands.assignGames],
-        assignGames: [allCommands.getDisc],
-        discWars: [allCommands.fight, allCommands.scan]
-      };
-
+const commandsByStage = {
+  start: [allCommands.enterGrid],
+  gridArrival: [allCommands.resistCapture, allCommands.acceptCapture],
+  postCapture: [allCommands.assignGames],
+  assignGames: [allCommands.getDisc],
+  discWars: [allCommands.fight, allCommands.scan],
+  rinzlerCombat: [allCommands.dodge, allCommands.counter, allCommands.yield],
+  cluEncounter: [
+    allCommands.talkCLU,
+    allCommands.resistCLU,
+    allCommands.scanCLU,
+    allCommands.scanSam,
+    allCommands.help,
+    allCommands.reset,
+    allCommands.restart
+  ]
+};
       function printOutput(text) {
         const div = document.createElement('div');
         div.className = 'output';
@@ -318,11 +334,50 @@ case 'rinzlerCombat':
       '[RINZLER] Blocage du mouvement.',
       'RINZLER : "Concepteur..."',
     ]);
-    gameStage = 'archivesAccess'; // pour de futurs ajouts
+    gameStage = 'cluEncounter';
   } else {
     printOutput('[ERREUR] Choix invalide. Essayez : dodge(), counter(), yield()');
   }
   break;
+
+case 'cluEncounter':
+  if (equalsCommand(cmd, allCommands.talkCLU)) {
+    delayedOutput([
+      '[RENCONTRE] Transmission sécurisée établie.',
+      'CLU : "Bienvenue, programme. Tu dois être désorienté."',
+      'CLU : "Je suis... Kevin Flynn. Ton père."',
+      '[INFO] Tentative d’usurpation de signature numérique détectée.',
+      '▶ Utilisez scanCLU() ou scanSam() pour enquêter.'
+    ]);
+  } else if (equalsCommand(cmd, allCommands.scanCLU)) {
+    delayedOutput([
+      '[SCAN] Sujet : CLU',
+      '[STATUT] Surintendant du système',
+      '[ID] Codificateur Logique Unique',
+      '[SIGNATURE ADN] Ne correspond PAS à Kevin Flynn',
+      '[ALERTE] Identité falsifiée'
+    ]);
+  } else if (equalsCommand(cmd, allCommands.scanSam)) {
+    delayedOutput([
+      '[SCAN] Sujet : SAM FLYNN',
+      '[STATUT] Utilisateur',
+      '[ADN] Authentifié',
+      '[PRIORITÉ] MAXIMALE',
+      '[AVERTISSEMENT] Mise sous surveillance immédiate'
+    ]);
+  } else if (equalsCommand(cmd, allCommands.resistCLU)) {
+    delayedOutput([
+      '[ACTION] Refus d’adhésion au discours de CLU.',
+      '[CLU] "Dommage... Vous auriez pu briller."',
+      '[SYSTEME] Envoi vers l’arène Lightcycle...',
+      '[ENVIRONNEMENT] Sol en verre noir, motos lumineuses alignées',
+      '▶ Commandes bientôt disponibles pour le Bloc 4 (course de Lightcycle)'
+    ]);
+    gameStage = 'lightcycleArena'; // à créer plus tard
+  } else {
+    printOutput('[ERREUR] Commande invalide. Tapez "help" pour voir les options.');
+  }
+  break;            
         }
       }
 
